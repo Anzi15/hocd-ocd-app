@@ -10,6 +10,7 @@ import type { Chapter, Book } from "@/lib/types"
 import { loadProgress, saveProgress, saveBundle, loadSettings } from "@/lib/storage"
 import chaptersData from "@/data/chapters.json"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function ChapterPage() {
   const router = useRouter()
@@ -84,16 +85,7 @@ export default function ChapterPage() {
     }
   }
 
-  const handleBuyBundle = () => {
-    playButtonSound()
-    saveBundle(selectedBooks)
-    router.push("/checkout")
-  }
 
-  const handleSkipChapter = () => {
-    playButtonSound()
-    router.push("/chapters")
-  }
 
   if (!chapter) {
     return (
@@ -146,30 +138,35 @@ export default function ChapterPage() {
                     <div className="text-center space-y-4">
                       <div className="text-2xl font-bold text-green-600 font-heading">Bundle Price: $45</div>
                       <div className="space-x-4">
+                        <Link href="/checkout" className="inline-block">
                         <Button
-                          onClick={handleBuyBundle}
                           size="lg"
                           className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
-                        >
+                          >
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           Buy This Bundle
                         </Button>
+                          </Link>
+
+                          <Link href="/chapters" className="inline-block">
                         <Button
                           variant="outline"
-                          onClick={handleSkipChapter}
                           className="animate-button-press font-heading"
-                        >
+                          >
                           Skip for Now
                         </Button>
+                          </Link>
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="text-center space-y-4">
                     <p className="text-lg text-gray-600 font-body">No books were selected in this chapter.</p>
-                    <Button onClick={handleSkipChapter} className="animate-button-press font-heading">
+                    <Link href="/chapters" className="inline-block">
+                    <Button  className="animate-button-press font-heading">
                       Continue to Next Chapter
                     </Button>
+                    </Link>
                   </div>
                 )}
               </CardContent>
