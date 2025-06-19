@@ -28,9 +28,13 @@ export default function CheckoutPage() {
     cvv: "",
     name: "",
   })
-  const [settings] = useState(loadSettings())
+  const [settings, setSettings] = useState<any>(null)
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSettings(loadSettings())
+    }
+
     const savedBundle = loadBundle()
     setBundle(savedBundle)
 
@@ -40,7 +44,7 @@ export default function CheckoutPage() {
   }, [router])
 
   const playButtonSound = () => {
-    if (settings.soundEnabled) {
+    if (settings?.soundEnabled) {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
@@ -79,10 +83,8 @@ export default function CheckoutPage() {
     setProcessing(true)
 
     try {
-      // Simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Save to user's library
       const existingLibrary = JSON.parse(localStorage.getItem("user_library") || "[]")
       const newLibraryItems = bundle.map((book) => ({
         bookTitle: book.title,
@@ -95,7 +97,6 @@ export default function CheckoutPage() {
       const updatedLibrary = [...existingLibrary, ...newLibraryItems]
       localStorage.setItem("user_library", JSON.stringify(updatedLibrary))
 
-      // Clear the bundle
       clearBundle()
 
       toast({ title: "Payment successful! Books added to your library." })
@@ -119,7 +120,6 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
           <div className="flex items-center mb-8">
             <Button variant="ghost" onClick={() => router.back()} className="mr-4 animate-button-press">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -128,7 +128,6 @@ export default function CheckoutPage() {
             <h1 className="text-3xl font-bold text-gray-800 font-heading">Checkout</h1>
           </div>
 
-          {/* Bundle Summary */}
           <Card className="mb-6 animate-scale-hover">
             <CardHeader>
               <CardTitle className="font-heading">Your Learning Bundle</CardTitle>
@@ -158,7 +157,6 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
-          {/* Payment Section */}
           <Card className="animate-scale-hover">
             <CardHeader>
               <CardTitle className="font-heading">Payment Method</CardTitle>
