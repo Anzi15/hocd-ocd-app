@@ -43,7 +43,7 @@
         "books": [
           {
             "title": "Why Disappointed, Depressed, Upset, Feel Hurt, diminished, Miss the Ex or Want The Ex Back?",
-            "youtubeUrl": "https://www.youtube.com/watch?v=r8O-i2eXGFQ",
+            "youtubeUrl": "https://youtu.be/9IRShFvA6NU?si=5K0fCnxzgd-S-2O-",
             "thumbnail": "/do you miss your ex.png"
           }
         ]
@@ -115,17 +115,6 @@
         ]
       },
       {
-        "id": "q11",
-        "text": "Do you want to improve your communication skills?",
-        "books": [
-          {
-            "title": "Crucial Conversations",
-            "youtubeUrl": "https://www.youtube.com/watch?v=yj9GLeNCgm4",
-            "thumbnail": "/placeholder.svg?height=120&width=200&text=Crucial+Conversations"
-          }
-        ]
-      },
-      {
         "id": "q12",
         "text": "Do you know the Solution to your feelings after she left you?",
         "books": [
@@ -154,18 +143,7 @@
           {
             "title": "You Will Never Move On As Long As You Think Of Her As Your.....",
             "youtubeUrl": "https://youtu.be/dqovE4WksH4",
-            "thumbnail": "as your ....png"
-          }
-        ]
-      },
-      {
-        "id": "q15",
-        "text": "Do you want to improve your creativity?",
-        "books": [
-          {
-            "title": "Big Magic by Elizabeth Gilbert",
-            "youtubeUrl": "https://www.youtube.com/watch?v=86x-u7X3uFI",
-            "thumbnail": "/placeholder.svg?height=120&width=200&text=Big+Magic"
+            "thumbnail": "/as your ....png"
           }
         ]
       },
@@ -457,7 +435,7 @@
           {
             "title": "Nothing Has Happened To You Because Of Your Break Up! Part 2/2",
             "youtubeUrl": "https://youtu.be/yPN71ZFJWR4?si=QTdQuPKO1Q19sbzP",
-            "thumbnail": "/nothign has happened part 2.png"
+            "thumbnail": "/nothing has happened part 2.png"
           }
         ]
       }
@@ -699,7 +677,7 @@
           {
             "title": "How to feel better, Does happiness come to us or do we create it, and how?",
             "youtubeUrl": "https://youtu.be/Gj8ViTQ2fRw?si=lWUpqZ27pFIWC_cg",
-            "thumbnail": "how to feel better whats happiness.png"
+            "thumbnail": "/how to feel better whats happiness.png"
           }
         ]
       }
@@ -844,28 +822,6 @@
         ]
       },
       {
-        "id": "q33",
-        "text": "Do you want to know how to stop thinking about your ex?",
-        "books": [
-          {
-            "title": "How To Stop Thinking About Your Ex?",
-            "youtubeUrl": "https://youtu.be/1CPYoD9pbzQ?si=PxJiDmRiUAYS4JFB",
-            "thumbnail": "/stop thinking about your ex.png"
-          }
-        ]
-      },
-      {
-        "id": "q34",
-        "text": "Do you want to know how to stop thinking about your ex?",
-        "books": [
-          {
-            "title": "How To Stop Thinking About Your Ex?",
-            "youtubeUrl": "https://youtu.be/1CPYoD9pbzQ?si=PxJiDmRiUAYS4JFB",
-            "thumbnail": "/stop thinking about your ex.png"
-          }
-        ]
-      },
-      {
         "id": "q35",
         "text": "Do you want to Why Most Relationships Fall Apart?",
         "books": [
@@ -884,17 +840,6 @@
             "title": "How To Prevent Thought Of Ex Popping Into Your Head?",
             "youtubeUrl": "https://youtu.be/4Ed_UFcnjYs?si=boB0WZFn2BA_tfQT",
             "thumbnail": "/thoaught of ex.png"
-          }
-        ]
-      },
-      {
-        "id": "q37",
-        "text": "Do you want to know how to stop thinking about your ex?",
-        "books": [
-          {
-            "title": "How To Stop Thinking About Your Ex?",
-            "youtubeUrl": "https://youtu.be/1CPYoD9pbzQ?si=PxJiDmRiUAYS4JFB",
-            "thumbnail": "/stop thinking about your ex.png"
           }
         ]
       },
@@ -926,17 +871,6 @@
             "title": "Why some women fail the relationships PART 5",
             "youtubeUrl": "https://youtu.be/6dGUXHfxl_Q?si=MUXdjwa9pqQlORGC",
             "thumbnail": "/WOMEN FAIL RL (5).png"
-          }
-        ]
-      },
-      {
-        "id": "q39",
-        "text": "Do you want to know how to stop thinking about your ex?",
-        "books": [
-          {
-            "title": "How To Stop Thinking About Your Ex?",
-            "youtubeUrl": "https://youtu.be/1CPYoD9pbzQ?si=PxJiDmRiUAYS4JFB",
-            "thumbnail": "/stop thinking about your ex.png"
           }
         ]
       },
@@ -1096,7 +1030,7 @@
           {
             "title": "The Best Way To Deal With Break Ups.",
             "youtubeUrl": "https://youtu.be/EQBqCjhrPb0?si=oY-TWyyCaOBF4cDg",
-            "thumbnail": "/the best way to deal.pngg"
+            "thumbnail": "/the best way to deal.png"
           }
         ]
       },

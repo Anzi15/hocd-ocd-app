@@ -19,8 +19,8 @@ export default function ChaptersPage() {
     setProgress(loadProgress())
   }, [])
 
-  const isChapterCompleted = (chapterId: string) => {
-    return progress[chapterId] === 20 // 20 questions per chapter
+  const isChapterCompleted = (chapter: Chapter) => {
+    return progress[chapter.id] === chapter.questions.length
   }
 
   const getChapterProgress = (chapterId: string) => {
@@ -48,8 +48,8 @@ export default function ChaptersPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {chapters.map((chapter, index) => {
               const chapterProgress = getChapterProgress(chapter.id)
-              const isCompleted = isChapterCompleted(chapter.id)
-              const progressPercentage = (chapterProgress / 20) * 100
+              const isCompleted = isChapterCompleted(chapter)
+              const progressPercentage = (chapterProgress / chapter.questions.length) * 100
 
               return (
                 <Card
@@ -75,7 +75,7 @@ export default function ChaptersPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Progress</span>
-                          <span>{chapterProgress}/20 questions</span>
+                          <span>{chapterProgress}/{chapter.questions.length} questions</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
@@ -112,7 +112,7 @@ export default function ChaptersPage() {
                   <div key={chapter.id} className="text-center">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                        isChapterCompleted(chapter.id)
+                        isChapterCompleted(chapter)
                           ? "bg-green-500 text-white"
                           : getChapterProgress(chapter.id) > 0
                             ? "bg-blue-500 text-white"
@@ -121,7 +121,7 @@ export default function ChaptersPage() {
                     >
                       {index + 1}
                     </div>
-                    <p className="text-xs text-gray-600">{getChapterProgress(chapter.id)}/20</p>
+                    <p className="text-xs text-gray-600">{getChapterProgress(chapter.id)}/{chapter.questions.length}</p>
                   </div>
                 ))}
               </div>
