@@ -23,6 +23,7 @@ export default function ChapterPage() {
   const [progress, setProgress] = useState<{ [key: string]: number }>({})
   const [showSummary, setShowSummary] = useState(false)
   const [settings] = useState(loadSettings())
+  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
     const foundChapter = chaptersData.find((c) => c.id === chapterId)
@@ -30,7 +31,6 @@ export default function ChapterPage() {
       setChapter(foundChapter)
       const savedProgress = loadProgress()
       setProgress(savedProgress)
-
       const chapterProgress = savedProgress[chapterId] || 0
       if (chapterProgress >= foundChapter.questions.length) {
         setShowSummary(true)
@@ -40,21 +40,23 @@ export default function ChapterPage() {
     }
   }, [chapterId])
 
+  useEffect(() => {
+    if (redirecting) {
+      router.push("/checkout")
+    }
+  }, [redirecting, router])
+
   const playButtonSound = () => {
     if (settings.soundEnabled) {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
-
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-
       oscillator.frequency.value = 800
       oscillator.type = "sine"
-
       gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
-
       oscillator.start(audioContext.currentTime)
       oscillator.stop(audioContext.currentTime + 0.1)
     }
@@ -62,24 +64,27 @@ export default function ChapterPage() {
 
   const handleAnswer = (answer: boolean) => {
     playButtonSound()
-
     if (answer && chapter) {
       const currentQuestion = chapter.questions[currentQuestionIndex]
-      if (currentQuestion && currentQuestion.books) {
+      if (currentQuestion?.books) {
         setSelectedBooks((prev) => [...prev, ...currentQuestion.books])
       }
     }
-
     const nextIndex = currentQuestionIndex + 1
     const newProgress = { ...progress, [chapterId]: nextIndex }
-
     setProgress(newProgress)
     saveProgress(newProgress)
-
     if (chapter && nextIndex >= chapter.questions.length) {
       setShowSummary(true)
     } else {
       setCurrentQuestionIndex(nextIndex)
+    }
+  }
+
+  const handleBuy = () => {
+    if (selectedBooks.length > 0) {
+      saveBundle([...selectedBooks])
+      setRedirecting(true)
     }
   }
 
@@ -106,7 +111,6 @@ export default function ChapterPage() {
                   Here are the books selected for your learning journey
                 </p>
               </CardHeader>
-
               <CardContent className="space-y-6">
                 {selectedBooks.length > 0 ? (
                   <>
@@ -130,22 +134,18 @@ export default function ChapterPage() {
                         </Card>
                       ))}
                     </div>
-
                     <div className="text-center space-y-4">
                       <div className="text-2xl font-bold text-green-600 font-heading">Bundle Price: $45</div>
                       <div className="space-x-4">
                         <Button
                           size="lg"
                           className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
-                          onClick={() => {
-                            saveBundle(selectedBooks)
-                            router.push("/checkout")
-                          }}
+                          onClick={handleBuy}
+                          disabled={redirecting}
                         >
                           <ShoppingCart className="mr-2 h-5 w-5" />
-                          Buy This Bundle
+                          {redirecting ? "Redirecting..." : "Buy This Bundle"}
                         </Button>
-
                         <Link href="/chapters" className="inline-block">
                           <Button variant="outline" className="animate-button-press font-heading">
                             Skip for Now
@@ -203,12 +203,10 @@ export default function ChapterPage() {
               Question {currentQuestionIndex + 1} of {chapter.questions.length}
             </div>
           </div>
-
           <div className="mb-8">
             <Progress value={progressPercentage} className="h-2" />
             <p className="text-center text-sm text-gray-600 mt-2 font-body">{chapter.title}</p>
           </div>
-
           <Card className="mb-6 animate-scale-hover">
             <CardHeader>
               <CardTitle className="text-xl text-center font-heading">{currentQuestion.text}</CardTitle>
@@ -236,7 +234,6 @@ export default function ChapterPage() {
               </div>
             </CardContent>
           </Card>
-
           {selectedBooks.length > 0 && (
             <div className="text-center text-sm text-gray-600 font-body">
               {selectedBooks.length} book{selectedBooks.length !== 1 ? "s" : ""} selected for your bundle
@@ -247,3 +244,4 @@ export default function ChapterPage() {
     </div>
   )
 }
+
