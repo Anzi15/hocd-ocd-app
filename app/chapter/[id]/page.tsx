@@ -31,7 +31,6 @@ export default function ChapterPage() {
       const savedProgress = loadProgress()
       setProgress(savedProgress)
 
-      // Resume from saved progress
       const chapterProgress = savedProgress[chapterId] || 0
       if (chapterProgress >= foundChapter.questions.length) {
         setShowSummary(true)
@@ -65,7 +64,6 @@ export default function ChapterPage() {
     playButtonSound()
 
     if (answer && chapter) {
-      // Add ALL books from this question to the bundle
       const currentQuestion = chapter.questions[currentQuestionIndex]
       if (currentQuestion && currentQuestion.books) {
         setSelectedBooks((prev) => [...prev, ...currentQuestion.books])
@@ -84,8 +82,6 @@ export default function ChapterPage() {
       setCurrentQuestionIndex(nextIndex)
     }
   }
-
-
 
   if (!chapter) {
     return (
@@ -138,24 +134,23 @@ export default function ChapterPage() {
                     <div className="text-center space-y-4">
                       <div className="text-2xl font-bold text-green-600 font-heading">Bundle Price: $45</div>
                       <div className="space-x-4">
-                        <Link href="/checkout" className="inline-block">
                         <Button
                           size="lg"
                           className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
-                          >
+                          onClick={() => {
+                            saveBundle(selectedBooks)
+                            router.push("/checkout")
+                          }}
+                        >
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           Buy This Bundle
                         </Button>
-                          </Link>
 
-                          <Link href="/chapters" className="inline-block">
-                        <Button
-                          variant="outline"
-                          className="animate-button-press font-heading"
-                          >
-                          Skip for Now
-                        </Button>
-                          </Link>
+                        <Link href="/chapters" className="inline-block">
+                          <Button variant="outline" className="animate-button-press font-heading">
+                            Skip for Now
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </>
@@ -163,9 +158,9 @@ export default function ChapterPage() {
                   <div className="text-center space-y-4">
                     <p className="text-lg text-gray-600 font-body">No books were selected in this chapter.</p>
                     <Link href="/chapters" className="inline-block">
-                    <Button  className="animate-button-press font-heading">
-                      Continue to Next Chapter
-                    </Button>
+                      <Button className="animate-button-press font-heading">
+                        Continue to Next Chapter
+                      </Button>
                     </Link>
                   </div>
                 )}
@@ -177,7 +172,6 @@ export default function ChapterPage() {
     )
   }
 
-  // Safety check for current question
   if (currentQuestionIndex >= chapter.questions.length) {
     setShowSummary(true)
     return null
@@ -186,7 +180,6 @@ export default function ChapterPage() {
   const currentQuestion = chapter.questions[currentQuestionIndex]
   const progressPercentage = ((currentQuestionIndex + 1) / chapter.questions.length) * 100
 
-  // Safety check for current question
   if (!currentQuestion) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -201,7 +194,6 @@ export default function ChapterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <Button variant="ghost" onClick={() => router.push("/chapters")} className="animate-button-press">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -212,28 +204,21 @@ export default function ChapterPage() {
             </div>
           </div>
 
-          {/* Progress Bar */}
           <div className="mb-8">
             <Progress value={progressPercentage} className="h-2" />
             <p className="text-center text-sm text-gray-600 mt-2 font-body">{chapter.title}</p>
           </div>
 
-          {/* Question Card */}
           <Card className="mb-6 animate-scale-hover">
             <CardHeader>
               <CardTitle className="text-xl text-center font-heading">{currentQuestion.text}</CardTitle>
             </CardHeader>
-
             <CardContent className="space-y-6">
-
-
-              {/* Answer Buttons */}
               <div className="grid grid-cols-1 gap-4">
                 <Button
                   onClick={() => handleAnswer(true)}
                   size="lg"
-                  
-                  className={`h-20 text-xl font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 `}
+                  className="h-20 text-xl font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">✓</div>
@@ -252,7 +237,6 @@ export default function ChapterPage() {
             </CardContent>
           </Card>
 
-          {/* Selected Books Counter */}
           {selectedBooks.length > 0 && (
             <div className="text-center text-sm text-gray-600 font-body">
               {selectedBooks.length} book{selectedBooks.length !== 1 ? "s" : ""} selected for your bundle
