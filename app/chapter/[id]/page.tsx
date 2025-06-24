@@ -24,7 +24,7 @@ export default function ChapterPage() {
   const [showSummary, setShowSummary] = useState(false)
   const [settings] = useState(loadSettings())
   const [redirecting, setRedirecting] = useState(false)
-  const [redirecting, setRedirecting] = useState(false)
+
 
   useEffect(() => {
     const foundChapter = chaptersData.find((c) => c.id === chapterId)
@@ -170,9 +170,8 @@ const handleAnswer = (answer: boolean) => {
                           onClick={handleBuy}
                           disabled={redirecting}
                         >
-                          onClick={handleBuy}
-                          disabled={redirecting}
-                        >
+
+                        
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           {redirecting ? "Redirecting..." : "Buy This Bundle"}
                         </Button>
@@ -244,7 +243,6 @@ const handleAnswer = (answer: boolean) => {
                 <Button
                   onClick={() => handleAnswer(true)}
                   size="lg"
-                  className="h-20 text-xl font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   className="h-20 text-xl font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   <div className="flex items-center space-x-3">
