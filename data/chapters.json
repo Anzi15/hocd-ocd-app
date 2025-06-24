@@ -206,6 +206,28 @@
             "thumbnail": "/delete memories after your breakup.png"
           }
         ]
+      },
+      {
+        "id": "q21",
+        "text": "Do You Know How Much Attention Should you PayTo Your GF So She Won't Leave You?",
+        "books": [
+          {
+            "title": "How Much Attention Should you Pay To Your GF So She Won't Leave You?",
+            "youtubeUrl": "https://www.youtube.com/watch?v=MolYpYmhbSo",
+            "thumbnail": "/how much attention is ok.png"
+          }
+        ]
+      },
+      {
+        "id": "q22",
+        "text": "Do You need To Know The Dangerous Kind Of Woman You Must All Watch Out For!",
+        "books": [
+          {
+            "title": "The Dangerous Kind Of Woman You Must All Watch Out For!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=Klc53mmL-zA",
+            "thumbnail": "/the dangerous women.png"
+          }
+        ]
       }
     ]
   },
@@ -359,7 +381,7 @@
       },
       {
         "id": "q14",
-        "text": "Do you Want to know If Is Your GF So Important and Respectable Because Of Her Own Accomplishments Or?",
+        "text": "Do you Want to know If Your GF Is So Important and Respectable Because Of Her Own Accomplishments Or?",
         "books": [
           {
             "title": "Is Your GF So Important and Respectable Because Of Her Own Accomplishments Or?",
@@ -403,7 +425,7 @@
       },
       {
         "id": "q18",
-        "text": "Do you want to know Why You Don't Want To move On From A Recent Past BreakUp!",
+        "text": "Do you want to know Why You Don't Want To move On From A Recent/Past BreakUp!",
         "books": [
           {
             "title": "Why You Don't Want To move On From A Recent Past BreakUp!",
@@ -779,10 +801,10 @@
       },
       {
         "id": "q29",
-        "text": "Want to know how much is too little — or too much?",
+        "text": "Want to know how much attention is too little — or too much?",
         "books": [
           {
-            "title": "How Much Attention Should you PayTo Your GF So She Won't Leave You?",
+            "title": "How Much Attention Should you Pay To Your GF So She Won't Leave You?",
             "youtubeUrl": "https://youtu.be/MolYpYmhbSo?si=6cFN62xD9l0wRZtU",
             "thumbnail": "/how much attention is ok.png"
           }
@@ -823,7 +845,7 @@
       },
       {
         "id": "q35",
-        "text": "Do you want to Why Most Relationships Fall Apart?",
+        "text": "Do you want to know why Most Relationships Fall Apart?",
         "books": [
           {
             "title": "Why Most Relationships Fall Apart?",
@@ -882,6 +904,50 @@
             "title": "Poppy Love! (Why You Feel So Devastated After A Break Up And Why Your Should Not be)!",
             "youtubeUrl": "https://youtu.be/OdYzX1zD4IA?si=_QKiCDKloPwqFVMi",
             "thumbnail": "/poppy love.png"
+          }
+        ]
+      },
+      {
+        "id": "q41",
+        "text": "Did Your Ex Cheated On You? Do You Know Why You have Anxiety Attacks As If You miss Her/Him?",
+        "books": [
+          {
+            "title": "Ex Cheated Me Yet I have Anxiety Attacks As If I miss Her!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=bJkkJoXa6E0",
+            "thumbnail": "/ex cheateed.png"
+          }
+        ]
+      },
+      {
+        "id": "q42",
+        "text": "Did You Say “I loved Her More Than My Life”!",
+        "books": [
+          {
+            "title": "What If My Ex Calls Me!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=l9n_HZcffOo",
+            "thumbnail": "/why you miss your ex.png"
+          }
+        ]
+      },
+      {
+        "id": "q43",
+        "text": "Have you ever loved someone so deeply that losing them felt like losing a part of yourself?",
+        "books": [
+          {
+            "title": "I loved Her More Than My Life!",
+            "youtubeUrl": "https://youtu.be/pAFqqcKyKeA?si=gSiAAVtZ0cLhf0UX",
+            "thumbnail": "/more than my life.png"
+          }
+        ]
+      },
+      {
+        "id": "q44",
+        "text": "Do you want to know How To Overcome That Loneliness After A Break-Up?",
+        "books": [
+          {
+            "title": "How To Overcome That Loneliness After A Break-Up?",
+            "youtubeUrl": "https://youtu.be/IOFE7YhSIYs?si=BzMq0iWhzltxl8gm",
+            "thumbnail": "/lonelieness after breakup.png"
           }
         ]
       }
@@ -982,7 +1048,7 @@
       },
       {
         "id": "q49",
-        "text": "Does the thought of your ex being with someone else still haunt you?",
+        "text": "Does the thought of your ex being with someone else still haunts you?",
         "books": [
           {
             "title": "When Your Ex Is In Bed With Another?",
@@ -1044,7 +1110,83 @@
             "thumbnail": "/why you still want her.png"
           }
         ]
-      }
+      },
+      {
+        "id": "q54",
+        "text": "Do You Want To Know Women Or Men Cheat More & Why?",
+        "books": [
+          {
+            "title": "#1 Reason Never Get Back With Your Ex!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=O9BDBnwLJjs",
+            "thumbnail": "/1 reason never get back with your ex.png"
+          }
+        ]
+      },
+      {
+        "id": "q55",
+        "text": "Do You Want to Know How To Get Back At Your Ex In One Move!",
+        "books": [
+          {
+            "title": "Why Are You Hurting After A Breakup?",
+            "youtubeUrl": "http://www.youtube.com/watch?v=1CPYoD9pbzQ",
+            "thumbnail": "/why are you hurting after breakup.png"
+          }
+        ]
+      },
+      {
+        "id": "q56",
+        "text": "Have You Been Betrayed?",
+        "books": [
+          {
+            "title": "Betrayal!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=nZb42u9qpGs",
+            "thumbnail": "/betayal.png"
+          }
+        ]
+      },
+      {
+        "id": "q57",
+        "text": "Is The Person Who Betrayed/Left You  Is Why You Feel This Way?",
+        "books": [
+          {
+            "title": "Love of your life breakups with you!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=EbHQ597ugKo",
+            "thumbnail": "/love of your life breakups with you.png"
+          }
+        ]
+      },
+      {
+        "id": "q58",
+        "text": "Do You want to Know Why Being Betrayed Feels So Hurtful And Feels More Painful Than It Deserves?",
+        "books": [
+          {
+            "title": "Why Being Betrayed Feels So Hurtful And Feels More Painful Than It Deserves?",
+            "youtubeUrl": "http://www.youtube.com/watch?v=kWgCAuYR7Kc",
+            "thumbnail": "/betrayal so painful part 1"
+          }
+        ]
+      },
+      {
+        "id": "q59",
+        "text": "Do You Want To Know Why You Are Not Happy After Your BreakUp?",
+        "books": [
+          {
+            "title": "Why You Are Not Happy After Your BreakUp",
+            "youtubeUrl": "http://www.youtube.com/watch?v=1CPYoD9pbzQ",
+            "thumbnail": "/you are not happy after your breakup.png"
+          }
+        ]
+      },
+      {
+        "id": "q60",
+        "text": "Do You Want To Know Why You Broke Up & How To Recover And Move On?",
+        "books": [
+          {
+            "title": "Why You Broke Up & How To Recover And Move On!",
+            "youtubeUrl": "http://www.youtube.com/watch?v=kWgCAuYR7Kc",
+            "thumbnail": "/recover and move on.png"
+          }
+        ]}
     ]
   }
 ]

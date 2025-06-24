@@ -128,36 +128,7 @@ export default function CheckoutPage() {
             <h1 className="text-3xl font-bold text-gray-800 font-heading">Checkout</h1>
           </div>
 
-          <Card className="mb-6 animate-scale-hover">
-            <CardHeader>
-              <CardTitle className="font-heading">Your Learning Bundle</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {bundle.map((book, index) => (
-                <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg animate-scale-hover">
-                  <Image
-                    src={book.thumbnail || "/placeholder.svg"}
-                    alt={book.title}
-                    width={60}
-                    height={90}
-                    className="rounded object-cover"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold font-heading">{book.title}</h4>
-                  </div>
-                </div>
-              ))}
-
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-lg font-semibold">
-                  <span className="font-body">Total ({bundle.length} books)</span>
-                  <span className="text-2xl text-green-600 font-heading">$45</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-scale-hover">
+                    <Card className="animate-scale-hover">
             <CardHeader>
               <CardTitle className="font-heading">Payment Method</CardTitle>
             </CardHeader>
@@ -268,6 +239,37 @@ export default function CheckoutPage() {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="mb-6 animate-scale-hover">
+            <CardHeader>
+              <CardTitle className="font-heading">Your Learning Bundle</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {bundle.map((book, index) => (
+                <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg animate-scale-hover">
+                  <Image
+                    src={book.thumbnail || "/placeholder.svg"}
+                    alt={book.title}
+                    width={60}
+                    height={90}
+                    className="rounded object-cover"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-semibold font-heading">{book.title}</h4>
+                  </div>
+                </div>
+              ))}
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span className="font-body">Total ({bundle.length} books)</span>
+                  <span className="text-2xl text-green-600 font-heading">$45</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+
         </div>
       </div>
 
