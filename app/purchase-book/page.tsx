@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, CreditCard, Wallet } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase";
-import { loadBundle, clearBundle, loadSettings } from "@/lib/storage";
+import { loadSettings } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import AuthModal from "@/components/auth-modal";
 import Image from "next/image";
+import audioAudioBooks from "@/data/books.json";
 
-export default function CheckoutPage() {
+export default function PurchaseBookPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const [user] = useAuthState(auth);
-  const [bundle, setBundle] = useState<any[]>([]);
+
+  const bookId = params.get("bookId");
+  const [book, setBook] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -31,17 +35,16 @@ export default function CheckoutPage() {
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setSettings(loadSettings());
-    }
-
-    const savedBundle = loadBundle();
-    setBundle(savedBundle);
-
-    if (savedBundle.length === 0) {
+    setSettings(loadSettings());
+    if (!bookId) return;
+    const selected = audioAudioBooks.find((b) => b.id === bookId);
+    if (!selected) {
+      toast({ title: "Book not found", variant: "destructive" });
       router.push("/");
+    } else {
+      setBook(selected);
     }
-  }, [router]);
+  }, [bookId, router]);
 
   const playButtonSound = () => {
     if (settings?.soundEnabled) {
@@ -52,7 +55,6 @@ export default function CheckoutPage() {
 
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
       oscillator.frequency.value = 600;
       oscillator.type = "sine";
 
@@ -97,20 +99,18 @@ export default function CheckoutPage() {
       const existingLibrary = JSON.parse(
         localStorage.getItem("user_library") || "[]"
       );
-      const newLibraryItems = bundle.map((book) => ({
+      const newItem = {
         bookTitle: book.title,
-        chapterId: "current",
+        chapterId: "single",
         videoUrl: book.youtubeUrl,
         purchasedAt: new Date().toISOString(),
         thumbnail: book.thumbnail,
-      }));
+      };
 
-      const updatedLibrary = [...existingLibrary, ...newLibraryItems];
+      const updatedLibrary = [...existingLibrary, newItem];
       localStorage.setItem("user_library", JSON.stringify(updatedLibrary));
 
-      clearBundle();
-
-      toast({ title: "Payment successful! AudioFile added to your library." });
+      toast({ title: "Payment successful! Book added to your library." });
       router.push("/library");
     } catch (error) {
       toast({
@@ -123,9 +123,8 @@ export default function CheckoutPage() {
     }
   };
 
-  if (bundle.length === 0) {
-    return <div>Loading...</div>;
-  }
+  if (!book)
+    return <div className="p-8 text-center">Loading book details...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -141,23 +140,34 @@ export default function CheckoutPage() {
               <span className="font-body">Back</span>
             </Button>
             <h1 className="text-3xl font-bold text-gray-800 font-heading">
-              Checkout
+              Buy Book
             </h1>
           </div>
+
+          <Card className="mb-6 animate-scale-hover">
+            <CardHeader>
+              <CardTitle className="font-heading">Selected Book</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 flex items-center">
+              <Image
+                src={book.thumbnail || "/placeholder.svg"}
+                alt={book.title}
+                width={100}
+                height={140}
+                className="rounded object-cover"
+              />
+              <div className="ml-4">
+                <h2 className="text-xl font-heading">{book.title}</h2>
+                <p className="text-green-600 font-semibold">${book.price}</p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="animate-scale-hover">
             <CardHeader>
               <CardTitle className="font-heading">Payment Method</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!user && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 font-body">
-                    Please sign in to complete your purchase.
-                  </p>
-                </div>
-              )}
-
               <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger
@@ -177,84 +187,57 @@ export default function CheckoutPage() {
                 </TabsList>
 
                 <TabsContent value="card" className="space-y-4">
+                  <Label className="font-body">Cardholder Name</Label>
+                  <Input
+                    value={cardDetails.name}
+                    onChange={(e) =>
+                      setCardDetails({ ...cardDetails, name: e.target.value })
+                    }
+                    placeholder="John Doe"
+                  />
+                  <Label className="font-body">Card Number</Label>
+                  <Input
+                    value={cardDetails.number}
+                    onChange={(e) =>
+                      setCardDetails({ ...cardDetails, number: e.target.value })
+                    }
+                    placeholder="1234 5678 9012 3456"
+                  />
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <Label htmlFor="card-name" className="font-body">
-                        Cardholder Name
-                      </Label>
-                      <Input
-                        id="card-name"
-                        placeholder="John Doe"
-                        value={cardDetails.name}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="card-number" className="font-body">
-                        Card Number
-                      </Label>
-                      <Input
-                        id="card-number"
-                        placeholder="1234 5678 9012 3456"
-                        value={cardDetails.number}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            number: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
                     <div>
-                      <Label htmlFor="card-expiry" className="font-body">
-                        Expiry Date
-                      </Label>
+                      <Label className="font-body">Expiry</Label>
                       <Input
-                        id="card-expiry"
-                        placeholder="MM/YY"
                         value={cardDetails.expiry}
                         onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
+                          setCardDetails({
+                            ...cardDetails,
                             expiry: e.target.value,
-                          }))
+                          })
                         }
-                        className="font-body"
+                        placeholder="MM/YY"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="card-cvv" className="font-body">
-                        CVV
-                      </Label>
+                      <Label className="font-body">CVV</Label>
                       <Input
-                        id="card-cvv"
-                        placeholder="123"
                         value={cardDetails.cvv}
                         onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
+                          setCardDetails({
+                            ...cardDetails,
                             cvv: e.target.value,
-                          }))
+                          })
                         }
-                        className="font-body"
+                        placeholder="123"
                       />
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="paypal" className="space-y-4">
+                <TabsContent value="paypal">
                   <div className="text-center p-8 bg-blue-50 rounded-lg">
                     <Wallet className="h-16 w-16 text-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600 font-body">
-                      You'll be redirected to PayPal to complete your payment
-                      securely.
+                      You'll be redirected to PayPal to complete payment.
                     </p>
                   </div>
                 </TabsContent>
@@ -264,7 +247,6 @@ export default function CheckoutPage() {
                 onClick={handlePayment}
                 disabled={processing}
                 className="w-full h-12 text-lg animate-button-press font-heading"
-                style={{ backgroundColor: "var(--primary-color)" }}
               >
                 {processing ? (
                   "Processing..."
@@ -275,53 +257,13 @@ export default function CheckoutPage() {
                     ) : (
                       <Wallet className="mr-2 h-5 w-5" />
                     )}
-                    Pay $45 with {paymentMethod === "card" ? "Card" : "PayPal"}
+                    Pay ${book.price} with {paymentMethod}
                   </>
                 )}
               </Button>
-
               <p className="text-xs text-gray-500 text-center font-body">
-                Secure payment processing. Your audioFile will be instantly
-                available in your library.
+                Secure payment processing. Book will be added to your library.
               </p>
-            </CardContent>
-          </Card>
-
-          <Card className="mb-6 animate-scale-hover">
-            <CardHeader>
-              <CardTitle className="font-heading">
-                Your Learning Bundle
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {bundle.map((book, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-4 p-4 border rounded-lg animate-scale-hover"
-                >
-                  <Image
-                    src={book.thumbnail || "/placeholder.svg"}
-                    alt={book.title}
-                    width={60}
-                    height={90}
-                    className="rounded object-cover"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold font-heading">{book.title}</h4>
-                  </div>
-                </div>
-              ))}
-
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-lg font-semibold">
-                  <span className="font-body">
-                    Total ({bundle.length} audioFile)
-                  </span>
-                  <span className="text-2xl text-green-600 font-heading">
-                    $45
-                  </span>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

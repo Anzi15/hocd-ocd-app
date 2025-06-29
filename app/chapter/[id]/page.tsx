@@ -25,10 +25,9 @@ export default function ChapterPage() {
 
   const BASE_URL = typeof window !== "undefined" ? window.location.origin : "";
 
-
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedBooks, setSelectedBooks] = useState<Book[]>([]);
+  const [selectedAudioFile, setSelectedAudioFile] = useState<Book[]>([]);
   const [progress, setProgress] = useState<{ [key: string]: number }>({});
   const [showSummary, setShowSummary] = useState(false);
   const [settings] = useState(loadSettings());
@@ -87,15 +86,17 @@ export default function ChapterPage() {
 
     if (chapter) {
       const currentQuestion = chapter.questions[currentQuestionIndex];
-      if (currentQuestion?.books) {
-        setSelectedBooks((prev) => {
+      if (currentQuestion?.audioFile) {
+        setSelectedAudioFile((prev) => {
           if (answer) {
-            const newBooks = currentQuestion.books.filter(
+            const newAudioFile = currentQuestion.audioFile.filter(
               (book) => !prev.includes(book)
             );
-            return [...prev, ...newBooks];
+            return [...prev, ...newAudioFile];
           } else {
-            return prev.filter((book) => !currentQuestion.books.includes(book));
+            return prev.filter(
+              (book) => !currentQuestion.audioFile.includes(book)
+            );
           }
         });
       }
@@ -114,8 +115,8 @@ export default function ChapterPage() {
   };
 
   const handleBuy = () => {
-    if (selectedBooks.length > 0) {
-      saveBundle([...selectedBooks]);
+    if (selectedAudioFile.length > 0) {
+      saveBundle([...selectedAudioFile]);
       setRedirecting(true);
     }
   };
@@ -135,21 +136,40 @@ export default function ChapterPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <Card className="animate-scale-hover">
+          <div className="max-w-4xl mx-auto py-4">
+            <Card className="animate-scale-hover py-4">
               <CardHeader>
                 <CardTitle className="text-2xl text-center font-heading">
                   Chapter Complete: {chapter.title}
                 </CardTitle>
                 <p className="text-center text-gray-600 font-body">
-                  Here are the books selected for your learning journey
+                  Here are the audioFile selected for your learning journey
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
-                {selectedBooks.length > 0 ? (
+                {selectedAudioFile.length > 0 ? (
                   <>
+                    <div className="text-center space-y-4">
+                      <div className="text-lg font-bold text-red-600 font-heading line-through italic">
+                        Actual price: ${25 * selectedAudioFile.length}
+                      </div>
+                      <div className="text-2xl font-bold text-green-600 font-heading">
+                        Dsicounted Price: $45
+                      </div>
+                      <div className="space-x-4">
+                        <Button
+                          size="lg"
+                          className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
+                          onClick={handleBuy}
+                          disabled={redirecting}
+                        >
+                          <ShoppingCart className="mr-2 h-5 w-5" />
+                          {redirecting ? "Redirecting..." : "Buy This Bundle"}
+                        </Button>
+                      </div>
+                    </div>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {selectedBooks.map((book, index) => (
+                      {selectedAudioFile.map((book, index) => (
                         <Card
                           key={index}
                           className="border-2 animate-scale-hover"
@@ -164,36 +184,21 @@ export default function ChapterPage() {
                                 className="rounded object-cover"
                               />
                               <div>
-                                <h4 className="font-semibold text-sm font-heading">
+                                <h4 className="font-semibold text-sm font-heading ">
                                   {book.title}
                                 </h4>
+                                $25
                               </div>
                             </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
-                    <div className="text-center space-y-4">
-                      <div className="text-2xl font-bold text-green-600 font-heading">
-                        Bundle Price: $45
-                      </div>
-                      <div className="space-x-4">
-                        <Button
-                          size="lg"
-                          className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
-                          onClick={handleBuy}
-                          disabled={redirecting}
-                        >
-                          <ShoppingCart className="mr-2 h-5 w-5" />
-                          {redirecting ? "Redirecting..." : "Buy This Bundle"}
-                        </Button>
-                      </div>
-                    </div>
                   </>
                 ) : (
                   <div className="text-center space-y-4">
                     <p className="text-lg text-gray-600 font-body">
-                      No books were selected in this chapter.
+                      No audioFile were selected in this chapter.
                     </p>
                     <Link href="/chapters" className="inline-block">
                       <Button className="animate-button-press font-heading">
@@ -231,8 +236,14 @@ export default function ChapterPage() {
     );
   }
 
+  // ✅ UPDATED QUOTE LOGIC
   const showQuote = (currentQuestionIndex + 1) % 6 === 0;
-  const quoteIndex = Math.floor((currentQuestionIndex + 1) / 6) - 1;
+  const questionsPerChapter = chapter.questions.length;
+  const chapterOffset =
+    chaptersData.findIndex((c) => c.id === chapterId) *
+    Math.ceil(questionsPerChapter / 6);
+  const quoteIndex =
+    chapterOffset + Math.floor((currentQuestionIndex + 1) / 6) - 1;
   const quote = sayings[quoteIndex % sayings.length];
 
   return (
@@ -288,108 +299,115 @@ export default function ChapterPage() {
                   No
                 </Button>
               </div>
-{showQuote && (
-  <div className="space-y-4 mt-4">
-    <Image
-      src={quote.imgSrc}
-      alt={`Quote ${quote.id}`}
-      width={1020}
-      height={720}
-      className="rounded-lg object-contain shadow-md w-full"
-    />
-    <div className="flex flex-wrap gap-2 justify-center">
-      <button
-        onClick={() =>
-          window.open(
-            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-              `${window.location.origin}${quote.imgSrc}`
-            )}&quote=${encodeURIComponent("Shared via mindthatseekstruth")}`,
-            "_blank"
-          )
-        }
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-      >
-        Share on Facebook
-      </button>
-      <button
-        onClick={() =>
-          window.open(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-              "Shared via @mindthatseekstruth"
-            )}&url=${encodeURIComponent(`${window.location.origin}${quote.imgSrc}`)}`,
-            "_blank"
-          )
-        }
-        className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded text-sm"
-      >
-        Share on Twitter
-      </button>
-      <button
-        onClick={() =>
-          window.open(
-            `https://api.whatsapp.com/send?text=${encodeURIComponent(
-              "Check this out!\n" + `${window.location.origin}${quote.imgSrc}`
-            )}`,
-            "_blank"
-          )
-        }
-        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm"
-      >
-        Share on WhatsApp
-      </button>
-      <a
-        href={`${window.location.origin}${quote.imgSrc}`}
-        download
-        className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm"
-      >
-        Download
-      </a>
-      <button
-        onClick={() => {
-          navigator.clipboard.writeText(`${window.location.origin}${quote.imgSrc}`);
-          alert("Quote image link copied to clipboard!");
-        }}
-        className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm"
-      >
-        Copy Link
-      </button>
-      <button
-        onClick={() => {
-          if (navigator.share) {
-            navigator
-              .share({
-                title: "Quote from mindthatseekstruth",
-                text: "Check this inspiring quote!",
-                url: `${window.location.origin}${quote.imgSrc}`,
-              })
-              .catch((error) => console.error("Share failed:", error));
-          } else {
-            alert("Sharing not supported on this device.");
-          }
-        }}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-      >
-        Share
-      </button>
-    </div>
-  </div>
-)}
 
-
+              {showQuote && (
+                <div className="space-y-4 mt-4">
+                  <Image
+                    src={quote.imgSrc}
+                    alt={`Quote ${quote.id}`}
+                    width={1020}
+                    height={720}
+                    className="rounded-lg object-contain shadow-md w-full"
+                  />
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                            `${window.location.origin}${quote.imgSrc}`
+                          )}&quote=${encodeURIComponent(
+                            "Shared via mindthatseekstruth"
+                          )}`,
+                          "_blank"
+                        )
+                      }
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Share on Facebook
+                    </button>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                            "Shared via @mindthatseekstruth"
+                          )}&url=${encodeURIComponent(
+                            `${window.location.origin}${quote.imgSrc}`
+                          )}`,
+                          "_blank"
+                        )
+                      }
+                      className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Share on Twitter
+                    </button>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                            "Check this out!\n" +
+                              `${window.location.origin}${quote.imgSrc}`
+                          )}`,
+                          "_blank"
+                        )
+                      }
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Share on WhatsApp
+                    </button>
+                    <a
+                      href={`${window.location.origin}${quote.imgSrc}`}
+                      download
+                      className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Download
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}${quote.imgSrc}`
+                        );
+                        alert("Quote image link copied to clipboard!");
+                      }}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Copy Link
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator
+                            .share({
+                              title: "Quote from mindthatseekstruth",
+                              text: "Check this inspiring quote!",
+                              url: `${window.location.origin}${quote.imgSrc}`,
+                            })
+                            .catch((error) =>
+                              console.error("Share failed:", error)
+                            );
+                        } else {
+                          alert("Sharing not supported on this device.");
+                        }
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
+                    >
+                      Share
+                    </button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {selectedBooks.length > 0 && (
+          {selectedAudioFile.length > 0 && (
             <div className="text-center text-sm text-gray-600 font-body">
-              {selectedBooks.length} book{selectedBooks.length !== 1 ? "s" : ""}{" "}
-              selected for your bundle
+              {selectedAudioFile.length} book
+              {selectedAudioFile.length !== 1 ? "s" : ""} selected for your
+              bundle
             </div>
           )}
         </div>
       </div>
 
-
-      {/* Navigation */}
       <div className="mt-6 flex justify-center">
         {currentQuestionIndex > 0 && (
           <Button

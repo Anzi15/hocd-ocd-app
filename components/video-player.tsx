@@ -11,16 +11,27 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps) {
-  const playerRef = useRef<any>(null) // iframe container
-  const youTubePlayerRef = useRef<any>(null) // actual YouTube player instance
+  const playerRef = useRef<any>(null)
+  const youTubePlayerRef = useRef<any>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isReady, setIsReady] = useState(false)
 
-  const getVideoId = (youtubeUrl: string) => {
-    return youtubeUrl.split("v=")[1]?.split("&")[0] || youtubeUrl.split("/").pop()
+  const getVideoId = (youtubeUrl: string | undefined) => {
+    if (!youtubeUrl) return null
+
+    try {
+      const urlObj = new URL(youtubeUrl)
+      const vParam = urlObj.searchParams.get("v")
+      if (vParam) return vParam
+
+      const pathnameParts = urlObj.pathname.split("/")
+      return pathnameParts[pathnameParts.length - 1]
+    } catch {
+      return null
+    }
   }
 
   const loadYouTubeAPI = () => {
@@ -39,6 +50,7 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
     await loadYouTubeAPI()
 
     const videoId = getVideoId(url)
+    if (!videoId) return
 
     new window.YT.Player(playerRef.current!, {
       videoId,
@@ -47,6 +59,7 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
         controls: 0,
         modestbranding: 1,
         rel: 0,
+        mute: 1,
       },
       events: {
         onReady: (event: any) => {
@@ -55,7 +68,6 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
           event.target.playVideo()
           setIsPlaying(true)
 
-          // ✅ Save actual player instance
           youTubePlayerRef.current = event.target
         },
         onStateChange: (event: any) => {
@@ -76,6 +88,7 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
   const handlePlayPause = () => {
     if (!isReady || !youTubePlayerRef.current) return
 
+    youTubePlayerRef.current.unMute()
     const state = youTubePlayerRef.current.getPlayerState()
 
     if (state === window.YT.PlayerState.PLAYING) {
@@ -99,11 +112,11 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
   }
 
   useEffect(() => {
-    initializePlayer()
+    if (url) initializePlayer()
     return () => {
       if (youTubePlayerRef.current?.destroy) youTubePlayerRef.current.destroy()
     }
-  }, [])
+  }, [url])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -122,7 +135,6 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
 
   return (
     <div className="relative bg-black rounded-lg overflow-hidden aspect-[3/4] group">
-      {/* Thumbnail */}
       <Image
         src={thumbnail || "/placeholder.svg?height=600&width=800&text=Video+Thumbnail"}
         alt={title}
@@ -130,7 +142,6 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
         className="object-cover pointer-events-none"
       />
 
-      {/* Overlay Controls */}
       <div className="absolute inset-0 bg-black/50 flex flex-col justify-between z-10">
         <div className="p-4">
           <h3 className="text-white font-semibold text-lg">{title}</h3>
@@ -172,7 +183,6 @@ export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps)
         </div>
       </div>
 
-      {/* Hidden YouTube Player */}
       <div ref={playerRef} className="absolute w-0 h-0 overflow-hidden pointer-events-none" />
     </div>
   )

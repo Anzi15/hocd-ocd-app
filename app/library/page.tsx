@@ -1,84 +1,104 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Search, Play, Calendar, BookOpen } from "lucide-react"
-import { useAuthState } from "react-firebase-hooks/auth"
-import { auth } from "@/lib/firebase"
-import type { LibraryBook } from "@/lib/types"
-import VideoPlayer from "@/components/video-player"
-import Image from "next/image"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Search, Play, Calendar, BookOpen } from "lucide-react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import type { LibraryBook } from "@/lib/types";
+import VideoPlayer from "@/components/video-player";
+import Image from "next/image";
 
 export default function LibraryPage() {
-  const router = useRouter()
-  const [user] = useAuthState(auth)
-  const [library, setLibrary] = useState<LibraryBook[]>([])
-  const [filteredLibrary, setFilteredLibrary] = useState<LibraryBook[]>([])
-  const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterBy, setFilterBy] = useState("all")
+  const router = useRouter();
+  const [user] = useAuthState(auth);
+  const [library, setLibrary] = useState<LibraryBook[]>([]);
+  const [filteredLibrary, setFilteredLibrary] = useState<LibraryBook[]>([]);
+  const [selectedBook, setSelectedBook] = useState<LibraryBook | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState("all");
 
   useEffect(() => {
     if (!user) {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
     // Load library from localStorage (in real app, this would be from Firebase)
-    const savedLibrary = JSON.parse(localStorage.getItem("user_library") || "[]")
-    setLibrary(savedLibrary)
-    setFilteredLibrary(savedLibrary)
-  }, [user, router])
+    const savedLibrary = JSON.parse(
+      localStorage.getItem("user_library") || "[]"
+    );
+    setLibrary(savedLibrary);
+    setFilteredLibrary(savedLibrary);
+  }, [user, router]);
 
   useEffect(() => {
-    let filtered = library
+    let filtered = library;
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter((book) => book.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter((book) =>
+        book.bookTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
     // Filter by category
     if (filterBy !== "all") {
       if (filterBy === "recent") {
-        filtered = filtered.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime())
+        filtered = filtered.sort(
+          (a, b) =>
+            new Date(b.purchasedAt).getTime() -
+            new Date(a.purchasedAt).getTime()
+        );
       } else {
-        filtered = filtered.filter((book) => book.chapterId === filterBy)
+        filtered = filtered.filter((book) => book.chapterId === filterBy);
       }
     }
 
-    setFilteredLibrary(filtered)
-  }, [library, searchTerm, filterBy])
+    setFilteredLibrary(filtered);
+  }, [library, searchTerm, filterBy]);
 
   const handleBookSelect = (book: LibraryBook) => {
-    setSelectedBook(book)
-  }
+    setSelectedBook(book);
+  };
 
   const handleBackToLibrary = () => {
-    setSelectedBook(null)
-  }
+    setSelectedBook(null);
+  };
 
   if (!user) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (selectedBook) {
+    console.log("Selected Book:", selectedBook);
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center mb-6">
-              <Button variant="ghost" onClick={handleBackToLibrary} className="mr-4">
+              <Button
+                variant="ghost"
+                onClick={handleBackToLibrary}
+                className="mr-4"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Library
               </Button>
             </div>
-              <h1 className="text-2xl font-bold text-gray-800 py-4">{selectedBook.bookTitle}</h1>
-
+            <h1 className="text-2xl font-bold text-gray-800 py-4">
+              {selectedBook.bookTitle}
+            </h1>
             <VideoPlayer
               url={selectedBook.videoUrl}
               title={selectedBook.bookTitle}
@@ -87,7 +107,7 @@ export default function LibraryPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -96,7 +116,11 @@ export default function LibraryPage() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center mb-8">
-            <Button variant="ghost" onClick={() => router.push("/")} className="mr-4">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/")}
+              className="mr-4"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
@@ -110,7 +134,7 @@ export default function LibraryPage() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search your books..."
+                    placeholder="Search your audioFile..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -121,7 +145,7 @@ export default function LibraryPage() {
                     <SelectValue placeholder="Filter by..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Books</SelectItem>
+                    <SelectItem value="all">All AudioFile</SelectItem>
                     <SelectItem value="recent">Recently Added</SelectItem>
                     <SelectItem value="chapter1">Chapter 1</SelectItem>
                     <SelectItem value="chapter2">Chapter 2</SelectItem>
@@ -156,7 +180,9 @@ export default function LibraryPage() {
                       </div>
 
                       <div>
-                        <h3 className="font-semibold text-sm line-clamp-2">{book.bookTitle}</h3>
+                        <h3 className="font-semibold text-sm line-clamp-2">
+                          {book.bookTitle}
+                        </h3>
                         <div className="flex items-center text-xs text-gray-500 mt-2">
                           <Calendar className="h-3 w-3 mr-1" />
                           {new Date(book.purchasedAt).toLocaleDateString()}
@@ -172,7 +198,9 @@ export default function LibraryPage() {
               <CardContent className="p-12 text-center">
                 <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  {searchTerm || filterBy !== "all" ? "No books found" : "Your library is empty"}
+                  {searchTerm || filterBy !== "all"
+                    ? "No audioFile found"
+                    : "Your library is empty"}
                 </h3>
                 <p className="text-gray-500 mb-6">
                   {searchTerm || filterBy !== "all"
@@ -189,5 +217,5 @@ export default function LibraryPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

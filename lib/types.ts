@@ -7,7 +7,7 @@ export interface Book {
 export interface Question {
   id: string
   text: string
-  books: Book[]
+  audioFile: Book[]
 }
 
 export interface Chapter {

@@ -22,8 +22,8 @@ export const loadSettings = (): AppSettings => {
   return saved ? JSON.parse(saved) : { soundEnabled: true, primaryColor: "blue" }
 }
 
-export const saveBundle = (books: any[]) => {
-  localStorage.setItem(BUNDLE_KEY, JSON.stringify(books))
+export const saveBundle = (audioFile: any[]) => {
+  localStorage.setItem(BUNDLE_KEY, JSON.stringify(audioFile))
 }
 
 export const loadBundle = () => {
