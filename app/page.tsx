@@ -263,7 +263,7 @@ export default function HomePage() {
                   5 Learning Chapters
                 </h3>
                 <p className="text-gray-600 text-sm font-body">
-                  Comprehensive topics covering personal growth and development
+                  Comprehensive topics covering about your breakup situation and how to deal with it.
                 </p>
               </CardContent>
             </Card>
