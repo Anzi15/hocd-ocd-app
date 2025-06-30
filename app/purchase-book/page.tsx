@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import AuthModal from "@/components/auth-modal";
 import Image from "next/image";
 import audioAudioBooks from "@/data/books.json";
 
-export default function PurchaseBookPage() {
+function PurchaseBookPage() {
   const router = useRouter();
   const params = useSearchParams();
   const [user] = useAuthState(auth);
@@ -275,5 +275,14 @@ export default function PurchaseBookPage() {
         onSuccess={() => setShowAuthModal(false)}
       />
     </div>
+  );
+};
+
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading book details...</div>}>
+      <PurchaseBookPage />
+    </Suspense>
   );
 }
