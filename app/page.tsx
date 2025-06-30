@@ -213,7 +213,7 @@ export default function HomePage() {
             </Button>
 
             <Link
-              href={"/audioAudioBooks"}
+              href={"/books"}
               className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
             >
               <Button
@@ -221,7 +221,7 @@ export default function HomePage() {
                 className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading w-full"
               >
                 <BookOpen className="mr-2 h-6 w-6" />
-                Book Store
+                Audio-Books Store
               </Button>
             </Link>
 
