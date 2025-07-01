@@ -311,6 +311,23 @@ export default function HomePage() {
         onClose={() => setShowSettings(false)}
         onSettingsChange={setSettings}
       />
+
+      <footer className="text-center text-gray-500 text-sm py-6">
+  
+  <br />
+  Made with ❤️ by <Link href="https://anziandco.com" target="_blank" className="underline hover:text-gray-700">
+    Anzi &. Co
+  </Link>
+  <br />
+  <Link href="/privacy-policy" className="underline hover:text-gray-700">
+    Privacy Policy
+  </Link>{" "}
+  |{" "}
+  <Link href="/terms" className="underline hover:text-gray-700">
+    Terms & Conditions
+  </Link>
+</footer>
+
     </div>
   );
 }

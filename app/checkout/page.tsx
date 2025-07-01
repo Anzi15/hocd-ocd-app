@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, CreditCard, Wallet } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -14,6 +12,10 @@ import { loadBundle, clearBundle, loadSettings } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import AuthModal from "@/components/auth-modal";
 import Image from "next/image";
+import {
+  PayPalScriptProvider,
+  PayPalButtons,
+} from "@paypal/react-paypal-js";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -21,13 +23,7 @@ export default function CheckoutPage() {
   const [bundle, setBundle] = useState<any[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("card");
-  const [cardDetails, setCardDetails] = useState({
-    number: "",
-    expiry: "",
-    cvv: "",
-    name: "",
-  });
+  const [paymentMethod, setPaymentMethod] = useState("paypal");
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
@@ -67,60 +63,35 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSuccess = async () => {
+    const existingLibrary = JSON.parse(
+      localStorage.getItem("user_library") || "[]"
+    );
+    const newLibraryItems = bundle.map((book: any) => ({
+      bookTitle: book.title,
+      chapterId: "current",
+      videoUrl: book.youtubeUrl,
+      purchasedAt: new Date().toISOString(),
+      thumbnail: book.thumbnail,
+    }));
+
+    const updatedLibrary = [...existingLibrary, ...newLibraryItems];
+    localStorage.setItem("user_library", JSON.stringify(updatedLibrary));
+    clearBundle();
+
+    toast({
+      title: "Payment successful! AudioFile added to your library.",
+    });
+
+    router.push("/library");
+  };
+
   const handlePayment = async () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    if (paymentMethod === "card") {
-      if (
-        !cardDetails.number ||
-        !cardDetails.expiry ||
-        !cardDetails.cvv ||
-        !cardDetails.name
-      ) {
-        toast({
-          title: "Please fill in all card details",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    playButtonSound();
-    setProcessing(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const existingLibrary = JSON.parse(
-        localStorage.getItem("user_library") || "[]"
-      );
-      const newLibraryItems = bundle.map((book) => ({
-        bookTitle: book.title,
-        chapterId: "current",
-        videoUrl: book.youtubeUrl,
-        purchasedAt: new Date().toISOString(),
-        thumbnail: book.thumbnail,
-      }));
-
-      const updatedLibrary = [...existingLibrary, ...newLibraryItems];
-      localStorage.setItem("user_library", JSON.stringify(updatedLibrary));
-
-      clearBundle();
-
-      toast({ title: "Payment successful! AudioFile added to your library." });
-      router.push("/library");
-    } catch (error) {
-      toast({
-        title: "Payment failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setProcessing(false);
-    }
+    toast({
+      title: "Card payments not supported",
+      description: "Please use PayPal to complete your purchase.",
+      variant: "destructive",
+    });
   };
 
   if (bundle.length === 0) {
@@ -161,13 +132,6 @@ export default function CheckoutPage() {
               <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger
-                    value="card"
-                    className="animate-button-press font-body"
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Credit Card
-                  </TabsTrigger>
-                  <TabsTrigger
                     value="paypal"
                     className="animate-button-press font-body"
                   >
@@ -176,109 +140,83 @@ export default function CheckoutPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="card" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <Label htmlFor="card-name" className="font-body">
-                        Cardholder Name
-                      </Label>
-                      <Input
-                        id="card-name"
-                        placeholder="John Doe"
-                        value={cardDetails.name}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="card-number" className="font-body">
-                        Card Number
-                      </Label>
-                      <Input
-                        id="card-number"
-                        placeholder="1234 5678 9012 3456"
-                        value={cardDetails.number}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            number: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="card-expiry" className="font-body">
-                        Expiry Date
-                      </Label>
-                      <Input
-                        id="card-expiry"
-                        placeholder="MM/YY"
-                        value={cardDetails.expiry}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            expiry: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="card-cvv" className="font-body">
-                        CVV
-                      </Label>
-                      <Input
-                        id="card-cvv"
-                        placeholder="123"
-                        value={cardDetails.cvv}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            cvv: e.target.value,
-                          }))
-                        }
-                        className="font-body"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
                 <TabsContent value="paypal" className="space-y-4">
                   <div className="text-center p-8 bg-blue-50 rounded-lg">
                     <Wallet className="h-16 w-16 text-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600 font-body">
-                      You'll be redirected to PayPal to complete your payment
-                      securely.
+                      You'll be redirected to PayPal to complete your payment securely.
                     </p>
                   </div>
+
+                  {user && (
+                    <PayPalScriptProvider
+                      options={{
+                        clientId:
+                          process.env.NEXT_PUBLIC_PAYPAL_PUBLISH_KEY || "",
+                        currency: "USD",
+                      }}
+                    >
+                      <PayPalButtons
+                        style={{ layout: "vertical" }}
+                        createOrder={(data, actions) => {
+                          return actions.order.create({
+                            purchase_units: [
+                              {
+                                description: `Purchase of ${bundle.length} AudioFile(s)`,
+                                amount: {
+                                  value: "45.00",
+                                },
+                              },
+                            ],
+                          });
+                        }}
+                        onApprove={async (data, actions) => {
+                          setProcessing(true);
+                          playButtonSound();
+
+                          try {
+                            await actions.order.capture();
+                            await handleSuccess();
+                          } catch (err) {
+                            toast({
+                              title: "Payment failed",
+                              description: "Something went wrong during PayPal processing.",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setProcessing(false);
+                          }
+                        }}
+                        onError={(err) => {
+                          toast({
+                            title: "Payment error",
+                            description: "PayPal payment could not be completed.",
+                            variant: "destructive",
+                          });
+                        }}
+                      />
+                    </PayPalScriptProvider>
+                  )}
                 </TabsContent>
               </Tabs>
 
-              <Button
-                onClick={handlePayment}
-                disabled={processing}
-                className="w-full h-12 text-lg animate-button-press font-heading"
-                style={{ backgroundColor: "var(--primary-color)" }}
-              >
-                {processing ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    {paymentMethod === "card" ? (
+              {paymentMethod === "card" && (
+                <Button
+                  onClick={handlePayment}
+                  disabled={processing}
+                  className="w-full h-12 text-lg animate-button-press font-heading"
+                  style={{ backgroundColor: "var(--primary-color)" }}
+                >
+                  {processing ? (
+                    "Processing..."
+                  ) : (
+                    <>
                       <CreditCard className="mr-2 h-5 w-5" />
-                    ) : (
-                      <Wallet className="mr-2 h-5 w-5" />
-                    )}
-                    Pay $45 with {paymentMethod === "card" ? "Card" : "PayPal"}
-                  </>
-                )}
-              </Button>
+                      Pay $45 with Card
+                    </>
+                  )}
+                </Button>
+              )}
 
               <p className="text-xs text-gray-500 text-center font-body">
                 Secure payment processing. Your audioFile will be instantly
