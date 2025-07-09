@@ -3,6 +3,9 @@ import type { Metadata } from "next"
 import { Inter, Montserrat, Roboto } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import Link from "next/link"
+import { BookOpen, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 const inter = Inter({ subsets: ["latin"] })
 const montserrat = Montserrat({
@@ -33,6 +36,21 @@ export default function RootLayout({
       <body className={`${inter.className} ${montserrat.variable} ${roboto.variable}`}>
         {children}
         <Toaster />
+              <footer className="text-center text-gray-500 text-sm py-6">
+  
+  <br />
+  Made with ❤️ by <Link href="https://anziandco.com" target="_blank" className="underline hover:text-gray-700">
+    Anzi &. Co
+  </Link>
+  <br />
+  <Link href="/privacy-policy" className="underline hover:text-gray-700">
+    Privacy Policy
+  </Link>{" "}
+  |{" "}
+  <Link href="/terms" className="underline hover:text-gray-700">
+    Terms & Conditions
+  </Link>
+</footer>
       </body>
     </html>
   )

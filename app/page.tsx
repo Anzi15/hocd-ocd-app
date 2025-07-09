@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, BookOpen, Library, Settings, LogIn, TableOfContents, TvMinimalPlay } from "lucide-react";
+import { Play, BookOpen, Library, Settings, LogIn, TableOfContents, TvMinimalPlay, Coins, ConeIcon } from "lucide-react";
 import IntroVideo from "@/components/IntroVide";
 import { loadProgress, loadSettings } from "@/lib/storage";
 import { auth } from "@/lib/firebase";
@@ -177,11 +177,11 @@ export default function HomePage() {
           <Card className="animate-scale-hover">
             <CardContent className="p-6">
               <h2 className="text-2xl font-bold mb-4 text-center font-heading">
-                Welcome to Your Breakup Healing Journey
+                The Ultimate BreakUp Cure
               </h2>
               <div className="flex justify-center"></div>
               <p className="text-center text-gray-600 mt-4 font-body">
-                Discover personalized breakup healing remedies.
+                Are you struggling to move on after a breakup? Feel lost, broken, or unsure of your next step? You're not alone — and help is here.
               </p>
             </CardContent>
             <h3 className="text-center font-bold">
@@ -237,6 +237,19 @@ export default function HomePage() {
               >
                 <TvMinimalPlay className="mr-2 h-6 w-6" />
                 Talk to mehran live
+              </Button>
+            </Link>
+
+            <Link
+              href="/freebies"
+              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
+            >
+              <Button
+                variant="outline"
+                className="w-full h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
+              >
+                <ConeIcon className="mr-2 h-6 w-6" />
+                Free bees
               </Button>
             </Link>
 
@@ -312,21 +325,7 @@ export default function HomePage() {
         onSettingsChange={setSettings}
       />
 
-      <footer className="text-center text-gray-500 text-sm py-6">
-  
-  <br />
-  Made with ❤️ by <Link href="https://anziandco.com" target="_blank" className="underline hover:text-gray-700">
-    Anzi &. Co
-  </Link>
-  <br />
-  <Link href="/privacy-policy" className="underline hover:text-gray-700">
-    Privacy Policy
-  </Link>{" "}
-  |{" "}
-  <Link href="/terms" className="underline hover:text-gray-700">
-    Terms & Conditions
-  </Link>
-</footer>
+
 
     </div>
   );

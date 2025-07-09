@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 
-const YOUTUBE_ID = "CjNRgEMrlrg"; // Your YouTube video ID
-const THUMBNAIL_URL = "https://img.youtube.com/vi/CjNRgEMrlrg/maxresdefault.jpg"; // Or your custom URL
+const YOUTUBE_ID = "CjNRgEMrlrg";
+const THUMBNAIL_URL =
+  "https://img.youtube.com/vi/CjNRgEMrlrg/maxresdefault.jpg";
 
 export default function YouTubeCustomPlayer() {
   const playerRef = useRef<any>(null);
@@ -21,7 +22,10 @@ export default function YouTubeCustomPlayer() {
     let interval: any;
     if (playerReady && started) {
       interval = setInterval(() => {
-        if (playerRef.current) {
+        if (
+          playerRef.current &&
+          typeof playerRef.current.getCurrentTime === "function"
+        ) {
           setCurrentTime(playerRef.current.getCurrentTime());
         }
       }, 500);
@@ -38,7 +42,7 @@ export default function YouTubeCustomPlayer() {
         const tag = document.createElement("script");
         tag.src = "https://www.youtube.com/iframe_api";
         document.body.appendChild(tag);
-        window.onYouTubeIframeAPIReady = createPlayer;
+        (window as any).onYouTubeIframeAPIReady = createPlayer;
       }
     };
 
@@ -46,7 +50,13 @@ export default function YouTubeCustomPlayer() {
   }, []);
 
   const createPlayer = () => {
-    playerRef.current = new YT.Player("yt-player", {
+    const container = document.getElementById("yt-player");
+    if (!container) {
+      console.warn("YouTube player container not found.");
+      return;
+    }
+
+    playerRef.current = new YT.Player(container, {
       videoId: YOUTUBE_ID,
       playerVars: {
         autoplay: 0,
@@ -59,7 +69,12 @@ export default function YouTubeCustomPlayer() {
       events: {
         onReady: () => {
           setPlayerReady(true);
-          setDuration(playerRef.current.getDuration());
+          if (
+            playerRef.current &&
+            typeof playerRef.current.getDuration === "function"
+          ) {
+            setDuration(playerRef.current.getDuration());
+          }
         },
         onStateChange: (event) => {
           if (event.data === YT.PlayerState.PAUSED) setIsPlaying(false);
@@ -67,10 +82,16 @@ export default function YouTubeCustomPlayer() {
         },
       },
     });
+
+    console.log("YT Player Created:", playerRef.current);
   };
 
   const play = () => {
-    if (playerReady) {
+    if (
+      playerReady &&
+      playerRef.current &&
+      typeof playerRef.current.playVideo === "function"
+    ) {
       setStarted(true);
       playerRef.current.playVideo();
       triggerControlsAutoHide();
@@ -78,14 +99,23 @@ export default function YouTubeCustomPlayer() {
   };
 
   const pause = () => {
-    if (playerReady) {
+    if (
+      playerReady &&
+      playerRef.current &&
+      typeof playerRef.current.pauseVideo === "function"
+    ) {
       playerRef.current.pauseVideo();
       triggerControlsAutoHide();
     }
   };
 
   const forward = () => {
-    if (playerReady) {
+    if (
+      playerReady &&
+      playerRef.current &&
+      typeof playerRef.current.getCurrentTime === "function" &&
+      typeof playerRef.current.seekTo === "function"
+    ) {
       const current = playerRef.current.getCurrentTime();
       playerRef.current.seekTo(current + 10, true);
       triggerControlsAutoHide();
@@ -93,7 +123,12 @@ export default function YouTubeCustomPlayer() {
   };
 
   const backward = () => {
-    if (playerReady) {
+    if (
+      playerReady &&
+      playerRef.current &&
+      typeof playerRef.current.getCurrentTime === "function" &&
+      typeof playerRef.current.seekTo === "function"
+    ) {
       const current = playerRef.current.getCurrentTime();
       playerRef.current.seekTo(current - 10, true);
       triggerControlsAutoHide();
@@ -101,7 +136,11 @@ export default function YouTubeCustomPlayer() {
   };
 
   const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (playerReady) {
+    if (
+      playerReady &&
+      playerRef.current &&
+      typeof playerRef.current.seekTo === "function"
+    ) {
       const time = parseFloat(e.target.value);
       playerRef.current.seekTo(time, true);
       setCurrentTime(time);
@@ -130,16 +169,17 @@ export default function YouTubeCustomPlayer() {
       onClick={handleTap}
       onMouseMove={triggerControlsAutoHide}
     >
-      {/* YouTube iframe (covered completely by overlay) */}
-      <div id="yt-player" className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" />
+      {/* YouTube iframe container wrapper */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+        <div id="yt-player" className="w-full h-full" />
+      </div>
+
+      {/* Transparent overlay for interactions */}
       <div className="absolute top-0 left-0 w-full h-full bg-transparent z-10 pointer-events-auto" />
 
-      {/* ▶️ Show custom thumbnail until started */}
+      {/* Thumbnail before play */}
       {!started && (
-        <div
-          className="absolute inset-0 z-20 cursor-pointer"
-          onClick={play}
-        >
+        <div className="absolute inset-0 z-20 cursor-pointer" onClick={play}>
           <img
             src={THUMBNAIL_URL}
             alt="Video Thumbnail"
@@ -151,14 +191,13 @@ export default function YouTubeCustomPlayer() {
         </div>
       )}
 
-      {/* Controls with fade transition */}
+      {/* Custom controls */}
       {playerReady && started && (
         <div
           className={`absolute inset-x-0 bottom-0 z-20 flex flex-col gap-2 px-4 pb-4 transition-opacity duration-300 ${
             showControls ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          {/* Seekbar */}
           <input
             type="range"
             min={0}
@@ -167,7 +206,6 @@ export default function YouTubeCustomPlayer() {
             onChange={seek}
             className="w-full accent-white cursor-pointer"
           />
-          {/* Buttons */}
           <div className="flex gap-4 justify-center items-center">
             <button onClick={backward} className="text-white">
               <RotateCcw />
