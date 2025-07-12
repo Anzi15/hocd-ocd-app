@@ -249,7 +249,7 @@ export default function HomePage() {
                 className="w-full h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
               >
                 <ConeIcon className="mr-2 h-6 w-6" />
-                Free bees
+                Freebies
               </Button>
             </Link>
 
@@ -265,8 +265,12 @@ export default function HomePage() {
             )}
           </div>
 
+
           {/* Features */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+<Card className="py-3 text-center text-bold">
+  Also on this app:
+</Card>
             <Card className="animate-scale-hover">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
