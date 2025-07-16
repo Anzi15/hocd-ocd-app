@@ -17,6 +17,7 @@ import VideoPlayer from "@/components/video-player";
 import AnimatedBackground from "@/components/animated-background";
 import type { AppSettings } from "@/lib/types";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   const router = useRouter();
@@ -225,20 +226,6 @@ export default function HomePage() {
               </Button>
             </Link>
 
-            <Link
-              href="https://mindthatseekstruth.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
-            >
-              <Button
-                variant="outline"
-                className="w-full h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
-              >
-                <TvMinimalPlay className="mr-2 h-6 w-6" />
-                Talk to mehran live
-              </Button>
-            </Link>
 
             <Link
               href="/freebies"
@@ -263,14 +250,57 @@ export default function HomePage() {
                 My Library
               </Button>
             )}
+
+            
+
+          </div>
+          <div>
+            <Card>
+              <CardContent className="p-0">
+                            <Link
+              href="https://mindthatseekstruth.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
+            >
+                <Image
+                 src={"/talk  to mehran.png"}
+                 width={720}
+                 height={480}
+                  alt="Talk to Mehran"
+                  className="w-full aspect-video object-cover rounded-lg"
+                />
+              
+            </Link>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <Card>
+              <CardContent className="p-0">
+                            <Link
+              href="https://www.mindthatseekstruth.com/books/transient-thoughts-and-me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
+            >
+                <Image
+                 src={"/author sign.png"}
+                 width={720}
+                 height={480}
+                  alt="Talk to Mehran"
+                  className="w-full aspect-video object-cover rounded-lg"
+                />
+              
+            </Link>
+              </CardContent>
+            </Card>
           </div>
 
 
           {/* Features */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-<Card className="py-3 text-center text-bold">
-  Also on this app:
-</Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+            On this app you will find:
             <Card className="animate-scale-hover">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
