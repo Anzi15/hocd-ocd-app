@@ -107,6 +107,7 @@ export default function ForYouPage() {
     </div>
 
       <YouTubeShort videoId="swZQE_4x6CY" title="Why Compatibility Is Important" />
+      <YouTubeShort videoId="kehJ9yZhSz4" title="Why you must have an honest image of your partner in your mind?" />
     </div>
   );
 }

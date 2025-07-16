@@ -176,6 +176,13 @@ export default function HomePage() {
         <div className=" mx-auto space-y-8">
           {/* Intro Video */}
           <Card className="animate-scale-hover">
+                              <Image
+                 src={"/header image.png"}
+                 width={720}
+                 height={480}
+                  alt="Talk to Mehran"
+                  className="w-full aspect-video object-cover rounded-lg"
+                />
             <CardContent className="p-6">
               <h2 className="text-2xl font-bold mb-4 text-center font-heading">
                 The Ultimate BreakUp Cure
@@ -209,7 +216,7 @@ export default function HomePage() {
               variant="outline"
               className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
             >
-              <TableOfContents className="mr-2 h-6 w-6" />
+              <TableOfContents className="mr-2 h-6 w-6 text-primary" />
               Choose Chapter
             </Button>
 
@@ -221,24 +228,32 @@ export default function HomePage() {
                 variant="outline"
                 className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading w-full"
               >
-                <BookOpen className="mr-2 h-6 w-6" />
+                <BookOpen className="mr-2 h-6 w-6 text-primary" />
                 Audio-Books Store
               </Button>
             </Link>
 
+<Link href="/freebies" className="block">
+  <Button
+    variant="outline"
+    className="w-full h-auto px-6 py-6 text-left text-base sm:text-lg font-semibold font-heading space-y-1 animate-scale-hover animate-button-press transition-all duration-200"
+  >
+    <div className="">
+      <div className="flex items-center mb-2">
+      <ConeIcon className="mr-3 h-6 w-6 text-primary" />
+      <span className="text-xl font-bold">Freebies</span>
 
-            <Link
-              href="/freebies"
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
-            >
-              <Button
-                variant="outline"
-                className="w-full h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
-              >
-                <ConeIcon className="mr-2 h-6 w-6" />
-                Freebies
-              </Button>
-            </Link>
+      </div>
+      <span className="text-gray-900"> 
+
+      Just had a breakup? We got you.
+      <br />
+      Watch the freebies here.
+      </span>
+    </div>
+  </Button>
+</Link>
+
 
             {hasLibraryItems && (
               <Button
@@ -246,7 +261,7 @@ export default function HomePage() {
                 variant="outline"
                 className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
               >
-                <Library className="mr-2 h-6 w-6" />
+                <Library className="mr-2 h-6 w-6 text-primary" />
                 My Library
               </Button>
             )}
@@ -291,6 +306,14 @@ export default function HomePage() {
                   alt="Talk to Mehran"
                   className="w-full aspect-video object-cover rounded-lg"
                 />
+
+                <Image
+                 src={"/WhatsApp Image 2025-07-16 at 16.02.31_fd5dec49.jpg"}
+                 width={720}
+                 height={480}
+                  alt="Talk to Mehran"
+                  className="w-full aspect-video object-cover rounded-lg"
+                />
               
             </Link>
               </CardContent>
@@ -300,7 +323,10 @@ export default function HomePage() {
 
           {/* Features */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+            <p className="text-center">
             On this app you will find:
+
+            </p>
             <Card className="animate-scale-hover">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
