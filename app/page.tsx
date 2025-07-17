@@ -177,9 +177,9 @@ export default function HomePage() {
           {/* Intro Video */}
           <Card className="animate-scale-hover">
                               <Image
-                 src={"/header image.png"}
+                 src={"/cover image.jpg"}
                  width={720}
-                 height={480}
+                 height={840}
                   alt="Talk to Mehran"
                   className="w-full aspect-video object-cover rounded-lg"
                 />
@@ -246,9 +246,9 @@ export default function HomePage() {
       </div>
       <span className="text-gray-900"> 
 
-      Just had a breakup? We got you.
+        Did you just break up? 
       <br />
-      Watch the freebies here.
+       Watch the free videos here
       </span>
     </div>
   </Button>
@@ -300,7 +300,7 @@ export default function HomePage() {
               className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
             >
                 <Image
-                 src={"/author sign.png"}
+                 src={"/author mehran books.jpg"}
                  width={720}
                  height={480}
                   alt="Talk to Mehran"
