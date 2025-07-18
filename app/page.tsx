@@ -294,7 +294,6 @@ export default function HomePage() {
             <Card>
               <CardContent className="p-0">
                             <Link
-              href="https://www.mindthatseekstruth.com/books/transient-thoughts-and-me"
               target="_blank"
               rel="noopener noreferrer"
               className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
