@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, BookOpen, Library, Settings, LogIn, TableOfContents, TvMinimalPlay, Coins, ConeIcon } from "lucide-react";
+import {
+  Play,
+  BookOpen,
+  Library,
+  Settings,
+  LogIn,
+  TableOfContents,
+  TvMinimalPlay,
+  Coins,
+  ConeIcon,
+} from "lucide-react";
 import IntroVideo from "@/components/IntroVide";
 import { loadProgress, loadSettings } from "@/lib/storage";
 import { auth } from "@/lib/firebase";
@@ -176,20 +186,22 @@ export default function HomePage() {
         <div className=" mx-auto space-y-8">
           {/* Intro Video */}
           <Card className="animate-scale-hover">
-                              <Image
-                 src={"/cover image.jpg"}
-                 width={720}
-                 height={840}
-                  alt="Talk to Mehran"
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
+            <Image
+              src={"/cover image.jpg"}
+              width={720}
+              height={840}
+              alt="Talk to Mehran"
+              className="w-full aspect-video object-cover rounded-lg"
+            />
             <CardContent className="p-6">
               <h2 className="text-2xl font-bold mb-4 text-center font-heading">
                 The Ultimate BreakUp Cure
               </h2>
               <div className="flex justify-center"></div>
               <p className="text-center text-gray-600 mt-4 font-body">
-                Are you struggling to move on after a breakup? Feel lost, broken, or unsure of your next step? You're not alone — and help is here.
+                Are you struggling to move on after a breakup? Feel lost,
+                broken, or unsure of your next step? You're not alone — and help
+                is here.
               </p>
             </CardContent>
             <h3 className="text-center font-bold">
@@ -233,27 +245,26 @@ export default function HomePage() {
               </Button>
             </Link>
 
-<Link href="/freebies" className="block">
-  <Button
-    variant="outline"
-    className="w-full h-auto px-6 py-6 text-left text-base sm:text-lg font-semibold font-heading space-y-1 animate-scale-hover animate-button-press transition-all duration-200"
-  >
-    <div className="">
-      <div className="flex items-center mb-2">
-      <ConeIcon className="mr-3 h-6 w-6 text-primary" />
-      <span className="text-xl font-bold">Freebies</span>
-
-      </div>
-      <span className="text-gray-900"> 
-
-        Did you just break up? 
-      <br />
-       Watch the free videos here
-      </span>
-    </div>
-  </Button>
-</Link>
-
+            <Link href="/freebies" className="block">
+              <Button
+                variant="outline"
+                className="w-full h-auto px-6 py-6 text-left text-base sm:text-lg font-semibold font-heading space-y-1 animate-scale-hover animate-button-press transition-all duration-200"
+              >
+                <div className="">
+                  <div className="flex items-center mb-2">
+                    <ConeIcon className="mr-3 h-6 w-6 text-primary" />
+                    <span className="text-xl font-bold text-center">
+                      Freebies
+                    </span>
+                  </div>
+                  <span className="text-gray-900 text-center">
+                    Did you just break up?
+                    <br />
+                    Watch the free videos here
+                  </span>
+                </div>
+              </Button>
+            </Link>
 
             {hasLibraryItems && (
               <Button
@@ -265,68 +276,59 @@ export default function HomePage() {
                 My Library
               </Button>
             )}
-
-            
-
           </div>
           <div>
             <Card>
               <CardContent className="p-0">
-                            <Link
-              href="https://mindthatseekstruth.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
-            >
-                <Image
-                 src={"/talk  to mehran.png"}
-                 width={720}
-                 height={480}
-                  alt="Talk to Mehran"
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
-              
-            </Link>
+                <Link
+                  href="https://mindthatseekstruth.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
+                >
+                  <Image
+                    src={"/talk  to mehran.png"}
+                    width={720}
+                    height={480}
+                    alt="Talk to Mehran"
+                    className="w-full aspect-video object-cover rounded-lg"
+                  />
+                </Link>
               </CardContent>
             </Card>
           </div>
           <div>
             <Card>
               <CardContent className="p-0">
-                            <Link
-              href="https://www.mindthatseekstruth.com/books/transient-thoughts-and-me"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
-            >
-                <Image
-                 src={"/author mehran books.jpg"}
-                 width={720}
-                 height={480}
-                  alt="Talk to Mehran"
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
+                <Link
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading p-0"
+                >
+                  <Image
+                    src={"/author mehran books.jpg"}
+                    width={720}
+                    height={480}
+                    alt="Talk to Mehran"
+                    className="w-full aspect-video object-cover rounded-lg"
+                  />
 
-                <Image
-                 src={"/WhatsApp Image 2025-07-16 at 16.02.31_fd5dec49.jpg"}
-                 width={720}
-                 height={480}
-                  alt="Talk to Mehran"
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
-              
-            </Link>
+                  <Image
+                    src={"/WhatsApp Image 2025-07-16 at 16.02.31_fd5dec49.jpg"}
+                    width={720}
+                    height={480}
+                    alt="Talk to Mehran"
+                    className="w-full aspect-video object-cover rounded-lg"
+                  />
+                </Link>
               </CardContent>
             </Card>
           </div>
-
 
           {/* Features */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-            <p className="text-center">
-            On this app you will find:
-
-            </p>
+            <p className="text-center">On this app you will find:</p>
             <Card className="animate-scale-hover">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -336,7 +338,8 @@ export default function HomePage() {
                   5 Learning Chapters
                 </h3>
                 <p className="text-gray-600 text-sm font-body">
-                  Comprehensive topics covering about your breakup situation and how to deal with it.
+                  Comprehensive topics covering about your breakup situation and
+                  how to deal with it.
                 </p>
               </CardContent>
             </Card>
@@ -384,9 +387,6 @@ export default function HomePage() {
         onClose={() => setShowSettings(false)}
         onSettingsChange={setSettings}
       />
-
-
-
     </div>
   );
 }
