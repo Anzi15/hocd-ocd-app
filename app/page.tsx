@@ -251,14 +251,17 @@ export default function HomePage() {
                 className="w-full h-auto px-6 py-6 text-left text-base sm:text-lg font-semibold font-heading space-y-1 animate-scale-hover animate-button-press transition-all duration-200"
               >
                 <div className="">
-                  <div className="flex items-center mb-2">
+                  <div className="flex items-center mb-2 mx-auto justify-center align-center">
                     <ConeIcon className="mr-3 h-6 w-6 text-primary" />
                     <span className="text-xl font-bold text-center">
                       Freebies
                     </span>
                   </div>
                   <span className="text-gray-900 text-center">
+                    <span className="text-center">
+
                     Did you just break up?
+                    </span>
                     <br />
                     Watch the free videos here
                   </span>

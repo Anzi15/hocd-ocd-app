@@ -16,6 +16,7 @@ import {
   PayPalScriptProvider,
   PayPalButtons,
 } from "@paypal/react-paypal-js";
+import Link from "next/link";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -126,7 +127,21 @@ export default function CheckoutPage() {
                   <p className="text-yellow-800 font-body">
                     Please sign in to complete your purchase.
                   </p>
+                
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
+      <button
+        onClick={() => {
+          console.log("Login button clicked");
+          setShowAuthModal(true);
+          setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 200);
+        }}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition"
+      >
+        Login / Sign up (Modal)
+      </button>
+    </div>
                 </div>
+
               )}
 
               <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
