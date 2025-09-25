@@ -114,13 +114,23 @@ export default function ChapterPage() {
     }
   };
 
-  const handleBuy = () => {
-    if (selectedAudioFile.length > 0) {
-      saveBundle([...selectedAudioFile]);
-      setRedirecting(true);
-    }
-  };
+  useEffect(() => {
+  // Prefetch checkout page when component mounts
+  router.prefetch("/checkout");
+}, [router]);
 
+const handleBuy = async () => {
+  if (selectedAudioFile.length > 0 && !redirecting) {
+    playButtonSound();
+    setRedirecting(true); // Show loading state immediately
+    
+    // Small delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    saveBundle([...selectedAudioFile]);
+    router.push("/checkout");
+  }
+};
   if (!chapter) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -157,15 +167,14 @@ export default function ChapterPage() {
                         Spacial Bundled Price: $45
                       </div>
                       <div className="space-x-4 flex justify-center items-center align">
-                        <button
-                          size="lg"
-                          className="bg-green-600 hover:bg-green-700 animate-button-press font-heading flex text-white px-2 py-2"
-                          onClick={handleBuy}
-                          disabled={redirecting}
-                        >
-                          <ShoppingCart className="mr-2 h-5 w-5" />
-                          {redirecting ? "Redirecting..." : "Buy This Bundle"}
-                        </button>
+<button
+  className="bg-green-600 hover:bg-green-700 animate-button-press font-heading flex text-white px-2 py-2"
+  onClick={handleBuy}
+  disabled={redirecting}
+>
+  <ShoppingCart className="mr-2 h-5 w-5" />
+  {redirecting ? "Redirecting..." : "Buy This Bundle"}
+</button>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">

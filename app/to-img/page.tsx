@@ -14,10 +14,13 @@ export default function PdfToImage() {
 
   useEffect(() => {
     (async () => {
-      // ✅ Import only in browser
-      const pdfjs = await import("pdfjs-dist/legacy/build/pdf.js");
-      // ✅ Point worker to /public
-      pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+      // ✅ Use legacy build
+      const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+      const pdfWorker = await import("pdfjs-dist/build/pdf.worker.mjs");
+
+      // ✅ Attach worker
+      pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+
       setPdfjsLib(pdfjs);
     })();
   }, []);
