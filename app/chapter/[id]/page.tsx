@@ -164,7 +164,7 @@ const handleBuy = async () => {
                         Actual price: ${25 * selectedAudioFile.length}
                       </div>
                       <div className="text-2xl font-bold text-green-600 font-heading">
-                        Spacial Bundled Price: $45
+                        Spacial Bundled Price: $85
                       </div>
                       <div className="space-x-4 flex justify-center items-center align">
 <button

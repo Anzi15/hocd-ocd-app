@@ -116,26 +116,42 @@ export default function HomePage() {
     }
   };
 
-  const handleStart = async () => {
-    playButtonSound();
-    const progress = loadProgress();
-    const lastChapter = Object.keys(progress).pop();
+  useEffect(() => {
+  router.prefetch("/chapter/chapter1");
+  router.prefetch("/chapter/chapter2");
+  router.prefetch("/chapter/chapter3");
+  router.prefetch("/chapter/chapter4");
+  router.prefetch("/chapter/chapter5");
+  router.prefetch("/chapter/chapter6");
+  router.prefetch("/chapter/chapters");
+}, [router]);
 
-    // Detect if running inside Median (or any WebView)
-    const isInApp = /Median/i.test(navigator.userAgent);
 
-    const target = lastChapter
-      ? `/chapter/${lastChapter}`
-      : "/chapter/chapter1";
+const handleStart = () => {
+  playButtonSound();
 
-    if (isInApp) {
-      // Hard redirect for better performance inside Median app
-      window.location.href = target;
-    } else {
-      // Normal SPA navigation for browsers
-      await router.push(target);
-    }
-  };
+  const progress = loadProgress();
+  const lastChapter = Object.keys(progress).pop();
+  const nextChapter = lastChapter
+    ? `chapter${parseInt(lastChapter.replace("chapter", "")) + 1}`
+    : "chapter1";
+
+  const target = lastChapter
+    ? `/chapter/${nextChapter}`
+    : "/chapter/chapter1";
+
+  // Detect if running inside Median (or any WebView)
+  const isInApp = /Median/i.test(navigator.userAgent);
+
+  if (isInApp) {
+    // Hard redirect = faster inside app
+    window.location.href = target;
+  } else {
+    // Don’t await, fire and forget
+    router.push(target);
+  }
+};
+
 
   const handleChooseChapter = () => {
     playButtonSound();

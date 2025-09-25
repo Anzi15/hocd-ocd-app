@@ -4,16 +4,16 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Wallet } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { loadSettings } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import AuthModal from "@/components/auth-modal";
 import Image from "next/image";
 import audioAudioBooks from "@/data/books.json";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
 function PurchaseBookPage() {
   const router = useRouter();
@@ -29,6 +29,7 @@ function PurchaseBookPage() {
   useEffect(() => {
     setSettings(loadSettings());
     if (!bookId) return;
+
     const selected = audioAudioBooks.find((b) => b.id === bookId);
     if (!selected) {
       toast({ title: "Book not found", variant: "destructive" });
@@ -55,20 +56,48 @@ function PurchaseBookPage() {
   };
 
   const handleSuccess = async () => {
-    const existingLibrary = JSON.parse(localStorage.getItem("user_library") || "[]");
-    const newItem = {
-      bookTitle: book.title,
-      chapterId: "single",
-      videoUrl: book.youtubeUrl,
-      purchasedAt: new Date().toISOString(),
-      thumbnail: book.thumbnail,
-    };
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please sign in to save your purchase.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const updatedLibrary = [...existingLibrary, newItem];
-    localStorage.setItem("user_library", JSON.stringify(updatedLibrary));
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
 
-    toast({ title: "Payment successful! Book added to your library." });
-    router.push("/library");
+      const newLibraryItem = {
+        bookTitle: book.title,
+        chapterId: "single",
+        videoUrl: book.youtubeUrl,
+        purchasedAt: new Date().toISOString(),
+        thumbnail: book.thumbnail,
+        id: `${book.title}-${Date.now()}`,
+      };
+
+      if (userDoc.exists()) {
+        await updateDoc(userRef, { library: arrayUnion(newLibraryItem) });
+      } else {
+        await setDoc(userRef, {
+          library: [newLibraryItem],
+          createdAt: new Date().toISOString(),
+          email: user.email,
+        });
+      }
+
+      toast({ title: "Payment successful! Book added to your library." });
+      router.push("/library");
+    } catch (error) {
+      console.error("Error saving to Firestore:", error);
+      toast({
+        title: "Error",
+        description: "Could not save purchase to your library.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!book) return <div className="p-8 text-center">Loading book details...</div>;
@@ -129,7 +158,7 @@ function PurchaseBookPage() {
               {user && (
                 <PayPalScriptProvider
                   options={{
-                    clientId: process.env.NEXT_PUBLIC_PAYPAL_PUBLISH_KEY || "",
+                    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
                     currency: "USD",
                   }}
                 >
@@ -141,10 +170,12 @@ function PurchaseBookPage() {
                           {
                             description: book.title,
                             amount: {
+                              currency_code: "USD",
                               value: book.price.toString(),
-                            },
+                            }
                           },
                         ],
+                        intent: "CAPTURE"
                       });
                     }}
                     onApprove={async (data, actions) => {
@@ -152,8 +183,16 @@ function PurchaseBookPage() {
                       playButtonSound();
 
                       try {
-                        await actions.order.capture();
-                        await handleSuccess();
+                        if (actions.order) {
+                          await actions.order.capture();
+                          await handleSuccess();
+                        } else {
+                          toast({
+                            title: "Payment failed",
+                            description: "PayPal order actions are unavailable.",
+                            variant: "destructive",
+                          });
+                        }
                       } catch (err) {
                         toast({
                           title: "Payment failed",
@@ -164,7 +203,7 @@ function PurchaseBookPage() {
                         setProcessing(false);
                       }
                     }}
-                    onError={(err) => {
+                    onError={() => {
                       toast({
                         title: "Payment error",
                         description: "PayPal payment could not be completed.",
@@ -176,8 +215,7 @@ function PurchaseBookPage() {
               )}
 
               <p className="text-xs text-gray-500 text-center font-body">
-                Secure payment processing. Book will be added to your library after successful
-                transaction.
+                Secure payment processing. Book will be added to your library after successful transaction.
               </p>
             </CardContent>
           </Card>

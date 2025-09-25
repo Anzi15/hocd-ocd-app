@@ -22,7 +22,7 @@ export async function POST(req) {
         intent: "CAPTURE",
         purchase_units: [
           {
-            amount: { currency_code: "USD", value: "45.00" },
+            amount: { currency_code: "USD", value: "85.00" },
           },
         ],
         application_context: {

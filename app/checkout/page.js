@@ -137,7 +137,7 @@ export default function CheckoutPage() {
     return <div>Loading...</div>;
   }
 
-  const totalAmount = 45; // static, you can calculate dynamically
+  const totalAmount = 85; // static, you can calculate dynamically
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
                   <div className="text-center p-8 bg-blue-50 rounded-lg">
                     <Wallet className="h-16 w-16 text-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600 font-body">
-                      You'll be redirected to PayPal to complete your payment securely.
+                      You'll be redirected to PayPal to complete your payment of 85$ USD securely.
                     </p>
                   </div>
 
@@ -248,6 +248,25 @@ export default function CheckoutPage() {
               <p className="text-xs text-gray-500 text-center font-body">
                 Secure payment processing. Your audioFile will be instantly
                 available in your library.
+              </p>
+              <p>
+                View our privacy policy{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  here
+                </Link>
+                and terms of service{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  here
+                </Link>
+                .
               </p>
             </CardContent>
           </Card>
