@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import IntroVideo from "@/components/IntroVide";
 import { loadProgress, loadSettings } from "@/lib/storage";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { signOut } from "firebase/auth";
 import AuthModal from "@/components/auth-modal";
@@ -28,6 +28,7 @@ import AnimatedBackground from "@/components/animated-background";
 import type { AppSettings } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
 export default function HomePage() {
   const router = useRouter();
@@ -59,11 +60,35 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // Check if user has any library items
-    const checkLibrary = () => {
-      const library = localStorage.getItem("user_library");
-      setHasLibraryItems(library && JSON.parse(library).length > 0);
+    // Check if user has any library items from Firebase
+    const checkLibrary = async () => {
+      if (!user) {
+        setHasLibraryItems(false);
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        
+        // Set up real-time listener for library updates
+        const unsubscribe = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const userLibrary = userData.library || [];
+            setHasLibraryItems(userLibrary.length > 0);
+          } else {
+            setHasLibraryItems(false);
+          }
+        });
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+      } catch (error) {
+        console.error("Error checking library:", error);
+        setHasLibraryItems(false);
+      }
     };
+
     checkLibrary();
   }, [user]);
 
@@ -91,15 +116,24 @@ export default function HomePage() {
     }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     playButtonSound();
     const progress = loadProgress();
     const lastChapter = Object.keys(progress).pop();
 
-    if (lastChapter) {
-      router.push(`/chapter/${lastChapter}`);
+    // Detect if running inside Median (or any WebView)
+    const isInApp = /Median/i.test(navigator.userAgent);
+
+    const target = lastChapter
+      ? `/chapter/${lastChapter}`
+      : "/chapter/chapter1";
+
+    if (isInApp) {
+      // Hard redirect for better performance inside Median app
+      window.location.href = target;
     } else {
-      router.push("/chapter/chapter1");
+      // Normal SPA navigation for browsers
+      await router.push(target);
     }
   };
 
@@ -214,25 +248,24 @@ export default function HomePage() {
 
           {/* Action Buttons */}
           <div className="grid md:grid-cols-3 gap-4">
-            <Button
+            <button
               onClick={handleStart}
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
+              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading text-white flex items-center justify-center rounded-md"
               style={{ backgroundColor: "var(--primary-color)" }}
             >
               <Play className="mr-2 h-6 w-6" />
               Start Learning
-            </Button>
+            </button>
 
-            <Button
+            <button
               onClick={handleChooseChapter}
-              variant="outline"
-              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
+              className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading   bg-white rounded-md border border-gray-300 flex items-center justify-center text-gray-800 hover:shadow-lg transition-shadow duration-200"
             >
               <TableOfContents className="mr-2 h-6 w-6 text-primary" />
               Choose Chapter
-            </Button>
+            </button>
 
-            <Link
+            <a
               href={"/books"}
               className="h-24 text-lg font-semibold animate-scale-hover animate-button-press font-heading"
             >
@@ -243,9 +276,9 @@ export default function HomePage() {
                 <BookOpen className="mr-2 h-6 w-6 text-primary" />
                 Audio-Books Store
               </Button>
-            </Link>
+            </a>
 
-            <Link href="/freebies" className="block">
+            <a href="/freebies" className="block">
               <Button
                 variant="outline"
                 className="w-full h-auto px-6 py-6 text-left text-base sm:text-lg font-semibold font-heading space-y-1 animate-scale-hover animate-button-press transition-all duration-200"
@@ -259,16 +292,16 @@ export default function HomePage() {
                   </div>
                   <span className="text-gray-900 text-center">
                     <span className="text-center">
-
-                    Did you just break up?
+                      Did you just break up?
                     </span>
                     <br />
                     Watch the free videos here
                   </span>
                 </div>
               </Button>
-            </Link>
+            </a>
 
+            {/* Show Library button only if user has library items */}
             {hasLibraryItems && (
               <Button
                 onClick={handleLibrary}
@@ -280,6 +313,7 @@ export default function HomePage() {
               </Button>
             )}
           </div>
+
           <div>
             <Card>
               <CardContent className="p-0">

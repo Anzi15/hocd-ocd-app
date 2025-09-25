@@ -156,16 +156,16 @@ export default function ChapterPage() {
                       <div className="text-2xl font-bold text-green-600 font-heading">
                         Spacial Bundled Price: $45
                       </div>
-                      <div className="space-x-4">
-                        <Button
+                      <div className="space-x-4 flex justify-center items-center align">
+                        <button
                           size="lg"
-                          className="bg-green-600 hover:bg-green-700 animate-button-press font-heading"
+                          className="bg-green-600 hover:bg-green-700 animate-button-press font-heading flex text-white px-2 py-2"
                           onClick={handleBuy}
                           disabled={redirecting}
                         >
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           {redirecting ? "Redirecting..." : "Buy This Bundle"}
-                        </Button>
+                        </button>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">

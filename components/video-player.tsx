@@ -1,189 +1,132 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Play, Pause, RotateCcw, RotateCw } from "lucide-react"
+import React, { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { Play, Pause, RotateCcw } from "lucide-react"
 
-interface VideoPlayerProps {
-  url: string
-  title: string
-  thumbnail?: string
+// ✅ Extend window typing
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady?: () => void
+    YT: any
+  }
 }
 
-export default function VideoPlayer({ url, title, thumbnail }: VideoPlayerProps) {
-  const playerRef = useRef<any>(null)
+interface VideoPlayerProps {
+  videoId: string
+  thumbnail?: string
+  title?: string
+}
+
+export default function VideoPlayer({ videoId, thumbnail, title = "Video" }: VideoPlayerProps) {
+  const playerRef = useRef<HTMLDivElement | null>(null)
   const youTubePlayerRef = useRef<any>(null)
-
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
   const [isReady, setIsReady] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
 
-  const getVideoId = (youtubeUrl: string | undefined) => {
-    if (!youtubeUrl) return null
+  // Load YouTube Iframe API
+  useEffect(() => {
+    if (window.YT && window.YT.Player) {
+      initializePlayer()
+    } else {
+      const script = document.createElement("script")
+      script.src = "https://www.youtube.com/iframe_api"
+      script.async = true
+      document.body.appendChild(script)
+      ;(window as any).onYouTubeIframeAPIReady = () => {
+        initializePlayer()
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    try {
-      const urlObj = new URL(youtubeUrl)
-      const vParam = urlObj.searchParams.get("v")
-      if (vParam) return vParam
-
-      const pathnameParts = urlObj.pathname.split("/")
-      return pathnameParts[pathnameParts.length - 1]
-    } catch {
-      return null
+  // Init Player
+  const initializePlayer = () => {
+    if (playerRef.current && !youTubePlayerRef.current) {
+      youTubePlayerRef.current = new window.YT.Player(playerRef.current, {
+        videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          mute: 1,
+        },
+        events: {
+          onReady: () => setIsReady(true),
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.PLAYING) setIsPlaying(true)
+            if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
+              setIsPlaying(false)
+            }
+          },
+        },
+      })
     }
   }
 
-  const loadYouTubeAPI = () => {
-    return new Promise<void>((resolve) => {
-      if (window.YT && window.YT.Player) return resolve()
-
-      const tag = document.createElement("script")
-      tag.src = "https://www.youtube.com/iframe_api"
-      document.body.appendChild(tag)
-
-      window.onYouTubeIframeAPIReady = () => resolve()
-    })
-  }
-
-  const initializePlayer = async () => {
-    await loadYouTubeAPI()
-
-    const videoId = getVideoId(url)
-    if (!videoId) return
-
-    new window.YT.Player(playerRef.current!, {
-      videoId,
-      playerVars: {
-        autoplay: 1,
-        controls: 0,
-        modestbranding: 1,
-        rel: 0,
-        mute: 1,
-      },
-      events: {
-        onReady: (event: any) => {
-          setDuration(event.target.getDuration())
-          setIsReady(true)
-          event.target.playVideo()
-          setIsPlaying(true)
-
-          youTubePlayerRef.current = event.target
-        },
-        onStateChange: (event: any) => {
-          if (event.data === window.YT.PlayerState.PLAYING) setIsPlaying(true)
-          if (
-            event.data === window.YT.PlayerState.PAUSED ||
-            event.data === window.YT.PlayerState.ENDED
-          )
-            setIsPlaying(false)
-        },
-      },
-    })
-  }
-
-  const formatTime = (time: number) =>
-    isNaN(time) ? "0:00" : `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}`
-
+  // Handle Play/Pause toggle
   const handlePlayPause = () => {
     if (!isReady || !youTubePlayerRef.current) return
+    const player = youTubePlayerRef.current
+    const state = player.getPlayerState()
 
-    youTubePlayerRef.current.unMute()
-    const state = youTubePlayerRef.current.getPlayerState()
+    player.unMute() // always unmute after click
 
     if (state === window.YT.PlayerState.PLAYING) {
-      youTubePlayerRef.current.pauseVideo()
+      player.pauseVideo()
     } else {
+      player.playVideo()
+    }
+  }
+
+  // Handle restart
+  const handleRestart = () => {
+    if (isReady && youTubePlayerRef.current) {
+      youTubePlayerRef.current.seekTo(0)
       youTubePlayerRef.current.playVideo()
     }
   }
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
-    youTubePlayerRef.current.seekTo(value, true)
-    setCurrentTime(value)
-  }
-
-  const handleSkip = (secs: number) => {
-    const time = youTubePlayerRef.current.getCurrentTime()
-    const newTime = Math.max(0, time + secs)
-    youTubePlayerRef.current.seekTo(newTime, true)
-    setCurrentTime(newTime)
-  }
-
-  useEffect(() => {
-    if (url) initializePlayer()
-    return () => {
-      if (youTubePlayerRef.current?.destroy) youTubePlayerRef.current.destroy()
-    }
-  }, [url])
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isReady) {
-      interval = setInterval(() => {
-        if (youTubePlayerRef.current) {
-          const time = youTubePlayerRef.current.getCurrentTime()
-          const dur = youTubePlayerRef.current.getDuration()
-          setCurrentTime(time)
-          setDuration(dur)
-        }
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isReady])
-
   return (
-    <div className="relative bg-black rounded-lg overflow-hidden aspect-[3/4] group">
+    <div className="relative w-full h-[400px] md:h-[600px] bg-black overflow-hidden rounded-xl">
+      {/* Thumbnail */}
       <Image
         src={thumbnail || "/placeholder.svg?height=600&width=800&text=Video+Thumbnail"}
         alt={title}
         fill
-        className="object-cover pointer-events-none"
+        className={`object-cover transition-opacity duration-500 pointer-events-none ${
+          isPlaying ? "opacity-0" : "opacity-100"
+        }`}
       />
 
+      {/* Overlay Controls */}
       <div className="absolute inset-0 bg-black/50 flex flex-col justify-between z-10">
-        <div className="p-4">
-          <h3 className="text-white font-semibold text-lg">{title}</h3>
+        <div className="flex justify-between items-center p-4">
+          <span className="text-white font-medium">{title}</span>
         </div>
 
-        <div className="flex flex-col gap-2 items-center p-4">
-          <div className="flex gap-4 items-center">
-            <button onClick={() => handleSkip(-10)} className="bg-white/80 p-2 rounded-full">
-              <RotateCcw className="w-5 h-5 text-black" />
-            </button>
-            <button
-              onClick={handlePlayPause}
-              className="bg-white p-4 rounded-full hover:scale-105 transition"
-            >
-              {isPlaying ? (
-                <Pause className="w-6 h-6 text-black" />
-              ) : (
-                <Play className="w-6 h-6 text-black ml-[2px]" />
-              )}
-            </button>
-            <button onClick={() => handleSkip(10)} className="bg-white/80 p-2 rounded-full">
-              <RotateCw className="w-5 h-5 text-black" />
-            </button>
-          </div>
+        <div className="flex justify-center items-center pb-12 space-x-6">
+          <button
+            onClick={handlePlayPause}
+            disabled={!isReady}
+            className="w-16 h-16 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white transition disabled:opacity-50"
+          >
+            {isPlaying ? <Pause size={32} /> : <Play size={32} />}
+          </button>
 
-          <div className="w-full flex items-center gap-2 text-white text-sm">
-            <span className="w-10 text-right">{formatTime(currentTime)}</span>
-            <input
-              type="range"
-              min={0}
-              max={duration || 100}
-              step="0.1"
-              value={currentTime}
-              onChange={handleSeek}
-              className="flex-grow accent-white"
-            />
-            <span className="w-10">{formatTime(duration)}</span>
-          </div>
+          <button
+            onClick={handleRestart}
+            disabled={!isReady}
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white transition disabled:opacity-50"
+          >
+            <RotateCcw size={24} />
+          </button>
         </div>
       </div>
 
-      <div ref={playerRef} className="absolute w-0 h-0 overflow-hidden pointer-events-none" />
+      {/* YouTube iframe goes here */}
+      <div ref={playerRef} className="absolute inset-0 w-full h-full" />
     </div>
   )
 }

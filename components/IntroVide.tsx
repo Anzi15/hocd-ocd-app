@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 
+// ✅ TypeScript global declarations for YouTube API
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady?: () => void; 
+  }
+}
+
 const YOUTUBE_ID = "CjNRgEMrlrg";
 const THUMBNAIL_URL =
   "https://img.youtube.com/vi/CjNRgEMrlrg/maxresdefault.jpg";
@@ -39,14 +47,25 @@ export default function YouTubeCustomPlayer() {
       if (window.YT && window.YT.Player) {
         createPlayer();
       } else {
-        const tag = document.createElement("script");
-        tag.src = "https://www.youtube.com/iframe_api";
-        document.body.appendChild(tag);
-        (window as any).onYouTubeIframeAPIReady = createPlayer;
+        if (
+          !document.querySelector(
+            "script[src='https://www.youtube.com/iframe_api']"
+          )
+        ) {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.body.appendChild(tag);
+        }
+        window.onYouTubeIframeAPIReady = createPlayer;
       }
     };
 
     loadYT();
+
+    // ✅ cleanup: clear timeout on unmount
+    return () => {
+      clearTimeout(hideTimeout.current);
+    };
   }, []);
 
   const createPlayer = () => {
@@ -56,15 +75,15 @@ export default function YouTubeCustomPlayer() {
       return;
     }
 
-    playerRef.current = new YT.Player(container, {
+    playerRef.current = new window.YT.Player(container, {
       videoId: YOUTUBE_ID,
       playerVars: {
         autoplay: 0,
         controls: 0,
         modestbranding: 1,
         rel: 0,
-        showinfo: 0,
         fs: 0,
+        // ❌ removed deprecated `showinfo`
       },
       events: {
         onReady: () => {
@@ -76,9 +95,9 @@ export default function YouTubeCustomPlayer() {
             setDuration(playerRef.current.getDuration());
           }
         },
-        onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PAUSED) setIsPlaying(false);
-          if (event.data === YT.PlayerState.PLAYING) setIsPlaying(true);
+        onStateChange: (event: any) => {
+          if (event.data === window.YT.PlayerState.PAUSED) setIsPlaying(false);
+          if (event.data === window.YT.PlayerState.PLAYING) setIsPlaying(true);
         },
       },
     });
@@ -130,7 +149,7 @@ export default function YouTubeCustomPlayer() {
       typeof playerRef.current.seekTo === "function"
     ) {
       const current = playerRef.current.getCurrentTime();
-      playerRef.current.seekTo(current - 10, true);
+      playerRef.current.seekTo(Math.max(current - 10, 0), true);
       triggerControlsAutoHide();
     }
   };
@@ -157,10 +176,7 @@ export default function YouTubeCustomPlayer() {
   };
 
   const handleTap = () => {
-    setShowControls((prev) => {
-      if (!prev) triggerControlsAutoHide();
-      return true;
-    });
+    triggerControlsAutoHide();
   };
 
   return (
@@ -202,7 +218,7 @@ export default function YouTubeCustomPlayer() {
             type="range"
             min={0}
             max={duration}
-            value={currentTime}
+            value={Math.floor(currentTime)} // ✅ rounded to avoid jitter
             onChange={seek}
             className="w-full accent-white cursor-pointer"
           />

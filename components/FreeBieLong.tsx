@@ -3,9 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 
+// ✅ TypeScript global declarations for YouTube API
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady?: () => void; 
+  }
+}
+
 const YOUTUBE_ID = "uetWVSuVW0U";
 const THUMBNAIL_URL =
-  "http://i3.ytimg.com/vi/uetWVSuVW0U/hqdefault.jpg";
+  "https://img.youtube.com/vi/uetWVSuVW0U/maxresdefault.jpg";
+const VIDEO_TITLE = "How to Heal After a Breakup"; // Added video title
 
 export default function YouTubeLong() {
   const playerRef = useRef<any>(null);
@@ -39,14 +48,25 @@ export default function YouTubeLong() {
       if (window.YT && window.YT.Player) {
         createPlayer();
       } else {
-        const tag = document.createElement("script");
-        tag.src = "https://www.youtube.com/iframe_api";
-        document.body.appendChild(tag);
-        (window as any).onYouTubeIframeAPIReady = createPlayer;
+        if (
+          !document.querySelector(
+            "script[src='https://www.youtube.com/iframe_api']"
+          )
+        ) {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.body.appendChild(tag);
+        }
+        window.onYouTubeIframeAPIReady = createPlayer;
       }
     };
 
     loadYT();
+
+    // ✅ cleanup: clear timeout on unmount
+    return () => {
+      clearTimeout(hideTimeout.current);
+    };
   }, []);
 
   const createPlayer = () => {
@@ -56,15 +76,15 @@ export default function YouTubeLong() {
       return;
     }
 
-    playerRef.current = new YT.Player(container, {
+    playerRef.current = new window.YT.Player(container, {
       videoId: YOUTUBE_ID,
       playerVars: {
         autoplay: 0,
         controls: 0,
         modestbranding: 1,
         rel: 0,
-        showinfo: 0,
         fs: 0,
+        // ❌ removed deprecated `showinfo`
       },
       events: {
         onReady: () => {
@@ -76,9 +96,9 @@ export default function YouTubeLong() {
             setDuration(playerRef.current.getDuration());
           }
         },
-        onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PAUSED) setIsPlaying(false);
-          if (event.data === YT.PlayerState.PLAYING) setIsPlaying(true);
+        onStateChange: (event: any) => {
+          if (event.data === window.YT.PlayerState.PAUSED) setIsPlaying(false);
+          if (event.data === window.YT.PlayerState.PLAYING) setIsPlaying(true);
         },
       },
     });
@@ -130,7 +150,7 @@ export default function YouTubeLong() {
       typeof playerRef.current.seekTo === "function"
     ) {
       const current = playerRef.current.getCurrentTime();
-      playerRef.current.seekTo(current - 10, true);
+      playerRef.current.seekTo(Math.max(current - 10, 0), true);
       triggerControlsAutoHide();
     }
   };
@@ -157,10 +177,7 @@ export default function YouTubeLong() {
   };
 
   const handleTap = () => {
-    setShowControls((prev) => {
-      if (!prev) triggerControlsAutoHide();
-      return true;
-    });
+    triggerControlsAutoHide();
   };
 
   return (
@@ -191,6 +208,13 @@ export default function YouTubeLong() {
         </div>
       )}
 
+      {/* Video Title at Bottom - YouTube style */}
+      <div className="absolute bottom-0 left-0 right-0 z-15 p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <h4 className="text-white font-semibold text-lg">
+          {VIDEO_TITLE}
+        </h4>
+      </div>
+
       {/* Custom controls */}
       {playerReady && started && (
         <div
@@ -202,7 +226,7 @@ export default function YouTubeLong() {
             type="range"
             min={0}
             max={duration}
-            value={currentTime}
+            value={Math.floor(currentTime)} // ✅ rounded to avoid jitter
             onChange={seek}
             className="w-full accent-white cursor-pointer"
           />

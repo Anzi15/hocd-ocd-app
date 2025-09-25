@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, CreditCard, Wallet } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { loadBundle, clearBundle, loadSettings } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import AuthModal from "@/components/auth-modal";
@@ -17,33 +17,46 @@ import {
   PayPalButtons,
 } from "@paypal/react-paypal-js";
 import Link from "next/link";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+
+// Stripe imports
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || ""
+);
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [user] = useAuthState(auth);
-  const [bundle, setBundle] = useState<any[]>([]);
+  const [bundle, setBundle] = useState([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paypal");
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState(null);
 
+  // Load settings + bundle
   useEffect(() => {
     if (typeof window !== "undefined") {
       setSettings(loadSettings());
-    }
+      const savedBundle = loadBundle();
+      setBundle(savedBundle);
 
-    const savedBundle = loadBundle();
-    setBundle(savedBundle);
-
-    if (savedBundle.length === 0) {
-      router.push("/");
+      if (savedBundle.length === 0) {
+        router.push("/");
+      }
     }
   }, [router]);
 
   const playButtonSound = () => {
     if (settings?.soundEnabled) {
       const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+        window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -65,39 +78,66 @@ export default function CheckoutPage() {
   };
 
   const handleSuccess = async () => {
-    const existingLibrary = JSON.parse(
-      localStorage.getItem("user_library") || "[]"
-    );
-    const newLibraryItems = bundle.map((book: any) => ({
-      bookTitle: book.title,
-      chapterId: "current",
-      videoUrl: book.youtubeUrl,
-      purchasedAt: new Date().toISOString(),
-      thumbnail: book.thumbnail,
-    }));
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please sign in to save your purchase.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const updatedLibrary = [...existingLibrary, ...newLibraryItems];
-    localStorage.setItem("user_library", JSON.stringify(updatedLibrary));
-    clearBundle();
+    try {
+      const userRef = doc(db, "users", user.uid);
+      
+      // Get existing user data
+      const userDoc = await getDoc(userRef);
+      
+      const newLibraryItems = bundle.map((book) => ({
+        bookTitle: book.title,
+        chapterId: "current",
+        videoUrl: book.youtubeUrl,
+        purchasedAt: new Date().toISOString(),
+        thumbnail: book.thumbnail,
+        id: `${book.title}-${Date.now()}`, // Unique ID for each book
+      }));
 
-    toast({
-      title: "Payment successful! AudioFile added to your library.",
-    });
+      if (userDoc.exists()) {
+        // User exists, update their library
+        await updateDoc(userRef, {
+          library: arrayUnion(...newLibraryItems)
+        });
+      } else {
+        // New user, create document with library
+        await setDoc(userRef, { 
+          library: newLibraryItems,
+          createdAt: new Date().toISOString(),
+          email: user.email
+        });
+      }
 
-    router.push("/library");
-  };
+      clearBundle();
 
-  const handlePayment = async () => {
-    toast({
-      title: "Card payments not supported",
-      description: "Please use PayPal to complete your purchase.",
-      variant: "destructive",
-    });
+      toast({
+        title: "Payment successful! AudioFile added to your library.",
+      });
+
+      router.push("/library");
+    } catch (error) {
+      console.error("Error saving to Firestore:", error);
+      toast({
+        title: "Error",
+        description: "Could not save purchase to your library.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (bundle.length === 0) {
     return <div>Loading...</div>;
   }
+
+  const totalAmount = 45; // static, you can calculate dynamically
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -127,34 +167,31 @@ export default function CheckoutPage() {
                   <p className="text-yellow-800 font-body">
                     Please sign in to complete your purchase.
                   </p>
-                
-                      <div className="flex flex-col sm:flex-row justify-center gap-2">
-      <button
-        onClick={() => {
-          console.log("Login button clicked");
-          setShowAuthModal(true);
-          setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 200);
-        }}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition"
-      >
-        Login / Sign up (Modal)
-      </button>
-    </div>
+                  <div className="flex flex-col sm:flex-row justify-center gap-2">
+                    <button
+                      onClick={() => {
+                        setShowAuthModal(true);
+                        setTimeout(
+                          () => window.scrollTo(0, document.body.scrollHeight),
+                          200
+                        );
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition"
+                    >
+                      Login / Sign up (Modal)
+                    </button>
+                  </div>
                 </div>
-
               )}
 
               <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger
-                    value="paypal"
-                    className="animate-button-press font-body"
-                  >
-                    <Wallet className="mr-2 h-4 w-4" />
-                    PayPal
+                  <TabsTrigger value="paypal" className="animate-button-press font-body">
+                    <Wallet className="mr-2 h-4 w-4" /> PayPal
                   </TabsTrigger>
                 </TabsList>
 
+                {/* PayPal */}
                 <TabsContent value="paypal" className="space-y-4">
                   <div className="text-center p-8 bg-blue-50 rounded-lg">
                     <Wallet className="h-16 w-16 text-blue-600 mx-auto mb-4" />
@@ -166,8 +203,7 @@ export default function CheckoutPage() {
                   {user && (
                     <PayPalScriptProvider
                       options={{
-                        clientId:
-                          process.env.NEXT_PUBLIC_PAYPAL_PUBLISH_KEY || "",
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
                         currency: "USD",
                       }}
                     >
@@ -178,17 +214,13 @@ export default function CheckoutPage() {
                             purchase_units: [
                               {
                                 description: `Purchase of ${bundle.length} AudioFile(s)`,
-                                amount: {
-                                  value: "45.00",
-                                },
+                                amount: { value: totalAmount.toFixed(2) },
                               },
                             ],
                           });
                         }}
                         onApprove={async (data, actions) => {
-                          setProcessing(true);
                           playButtonSound();
-
                           try {
                             await actions.order.capture();
                             await handleSuccess();
@@ -198,40 +230,20 @@ export default function CheckoutPage() {
                               description: "Something went wrong during PayPal processing.",
                               variant: "destructive",
                             });
-                          } finally {
-                            setProcessing(false);
                           }
                         }}
-                        onError={(err) => {
+                        onError={() =>
                           toast({
                             title: "Payment error",
                             description: "PayPal payment could not be completed.",
                             variant: "destructive",
-                          });
-                        }}
+                          })
+                        }
                       />
                     </PayPalScriptProvider>
                   )}
                 </TabsContent>
               </Tabs>
-
-              {paymentMethod === "card" && (
-                <Button
-                  onClick={handlePayment}
-                  disabled={processing}
-                  className="w-full h-12 text-lg animate-button-press font-heading"
-                  style={{ backgroundColor: "var(--primary-color)" }}
-                >
-                  {processing ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      <CreditCard className="mr-2 h-5 w-5" />
-                      Pay $45 with Card
-                    </>
-                  )}
-                </Button>
-              )}
 
               <p className="text-xs text-gray-500 text-center font-body">
                 Secure payment processing. Your audioFile will be instantly
@@ -242,9 +254,7 @@ export default function CheckoutPage() {
 
           <Card className="mb-6 animate-scale-hover">
             <CardHeader>
-              <CardTitle className="font-heading">
-                Your Learning Bundle
-              </CardTitle>
+              <CardTitle className="font-heading">Your Learning Bundle</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {bundle.map((book, index) => (
@@ -271,7 +281,7 @@ export default function CheckoutPage() {
                     Total ({bundle.length} audioFile)
                   </span>
                   <span className="text-2xl text-green-600 font-heading">
-                    $45
+                    ${totalAmount}
                   </span>
                 </div>
               </div>
@@ -286,5 +296,71 @@ export default function CheckoutPage() {
         onSuccess={() => setShowAuthModal(false)}
       />
     </div>
+  );
+}
+
+function StripeCheckoutForm({ amount, onSuccess }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  const handleStripeSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+
+    try {
+      const res = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+
+      const { clientSecret, error: serverError } = await res.json();
+      if (serverError) throw new Error(serverError);
+
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+        },
+      });
+
+      if (result.error) {
+        toast({
+          title: "Stripe error",
+          description: result.error.message,
+          variant: "destructive",
+        });
+      } else if (result.paymentIntent.status === "succeeded") {
+        toast({ title: "Payment successful!" });
+        onSuccess();
+      }
+    } catch (err) {
+      toast({
+        title: "Stripe error",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleStripeSubmit} className="space-y-4">
+      <div className="p-4 border rounded-lg bg-white">
+        <CardElement options={{ style: { base: { fontSize: "16px" } } }} />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full h-12 text-lg animate-button-press font-heading"
+        style={{ backgroundColor: "var(--primary-color)" }}
+      >
+        {processing ? "Processing..." : `Pay $${amount} with Card`}
+      </Button>
+    </form>
   );
 }

@@ -4,19 +4,31 @@ import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 import Link from "next/link";
 import YouTubeLong from "@/components/FreeBieLong";
+import YouTubeCustomPlayer from "@/components/IntroVide";
 
-// YouTube Iframe API Loader
+// ✅ YouTube Iframe API Loader (fixed: works for multiple players)
+let ytApiPromise: Promise<void> | null = null;
+
 const loadYouTubeAPI = (): Promise<void> => {
-  return new Promise((resolve) => {
-    if (window.YT && window.YT.Player) {
+  if (ytApiPromise) return ytApiPromise;
+
+  ytApiPromise = new Promise((resolve) => {
+    if ((window as any).YT && (window as any).YT.Player) {
       resolve();
     } else {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
-      (window as any).onYouTubeIframeAPIReady = () => resolve();
+
+      const prev = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        if (typeof prev === "function") prev();
+        resolve();
+      };
     }
   });
+
+  return ytApiPromise;
 };
 
 // ✅ YouTubeShort Component
@@ -31,14 +43,14 @@ const YouTubeShort = ({ videoId, title }: { videoId: string; title: string }) =>
       const container = document.getElementById(`short-${videoId}`);
       if (!container) return;
 
-      playerRef.current = new YT.Player(container, {
+      playerRef.current = new (window as any).YT.Player(container, {
         videoId,
         playerVars: { controls: 0, rel: 0, modestbranding: 1 },
         events: {
           onReady: () => setPlayerReady(true),
-          onStateChange: (e) => {
-            if (e.data === YT.PlayerState.PLAYING) setIsPlaying(true);
-            if (e.data === YT.PlayerState.PAUSED) setIsPlaying(false);
+          onStateChange: (e: any) => {
+            if (e.data === (window as any).YT.PlayerState.PLAYING) setIsPlaying(true);
+            if (e.data === (window as any).YT.PlayerState.PAUSED) setIsPlaying(false);
           },
         },
       });
@@ -55,8 +67,8 @@ const YouTubeShort = ({ videoId, title }: { videoId: string; title: string }) =>
 
   return (
     <div className="relative w-full max-w-xs aspect-[9/16] mx-auto rounded-xl overflow-hidden bg-black mb-10">
-      <div className="absolute inset-0 pointer-events-none">
-        <div id={`short-${videoId}`} className="w-full h-full" />
+      <div className="absolute inset-0">
+        <div id={`short-${videoId}`} className="w-full h-full pointer-events-auto" />
       </div>
 
       {!started && (
@@ -79,32 +91,37 @@ const YouTubeShort = ({ videoId, title }: { videoId: string; title: string }) =>
           </button>
         </div>
       )}
+      
+      {/* Video Title at Bottom - YouTube Shorts style */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <h4 className="text-white font-semibold text-lg">
+          {title}
+        </h4>
+      </div>
     </div>
   );
 };
-
 
 // ✅ Main Page
 export default function ForYouPage() {
   return (
     <div className="p-6">
       <div className="mt-8 py-8">
-  <Link
-    href="/"
-    className="inline-block text-blue-600 underline hover:text-blue-800 transition font-medium"
-  >
-    ← Back to Home
-  </Link>
-</div>
+        <Link
+          href="/"
+          className="inline-block text-blue-600 underline hover:text-blue-800 transition font-medium"
+        >
+          ← Back to Home
+        </Link>
+      </div>
       <h2 className="text-3xl text-center font-extrabold mb-6 ">Did you just breakup?</h2>
 
-    <h3 className="text-center pb-4">
-      Watch these free video guides to help you through it.
-    </h3>
-    <div className="w-full py-4">
-
-    <YouTubeLong />
-    </div>
+      <h3 className="text-center pb-4">
+        Watch these free video guides to help you through it.
+      </h3>
+      <div className="w-full py-4">
+        <YouTubeLong />
+      </div>
 
       <YouTubeShort videoId="swZQE_4x6CY" title="Why Compatibility Is Important" />
       <YouTubeShort videoId="kehJ9yZhSz4" title="Why you must have an honest image of your partner in your mind?" />

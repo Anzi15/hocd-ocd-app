@@ -142,10 +142,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
-
-        <Button variant="outline" onClick={handleGoogleAuth} className="w-full" disabled={loading}>
-          Continue with Google
-        </Button>
       </DialogContent>
     </Dialog>
   )
