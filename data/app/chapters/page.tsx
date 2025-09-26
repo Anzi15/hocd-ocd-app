@@ -165,7 +165,7 @@ export default function ChaptersPage() {
                       <div className="flex items-center justify-between text-sm text-gray-600">
                         <span className="flex items-center">
                           <Star className="h-4 w-4 mr-1 text-yellow-500" />
-                          {chapter.difficulty}
+                          {chapter?.difficulty}
                         </span>
                         <span>{chapter.questions.length} questions</span>
                       </div>

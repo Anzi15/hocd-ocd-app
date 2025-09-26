@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +19,35 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase";
 import type { LibraryBook } from "@/lib/types";
 import Image from "next/image";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import Swal from "sweetalert2";
+
+// Load YouTube IFrame API
+const loadYouTubeAPI = () => {
+  return new Promise<void>((resolve) => {
+    if (window.YT) {
+      resolve();
+      return;
+    }
+
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = () => {
+      resolve();
+    };
+  });
+};
+
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+    audioProgressInterval?: NodeJS.Timeout;
+  }
+}
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -35,6 +62,9 @@ export default function LibraryPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  const playerRef = useRef<any>(null);
+  const playerDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -120,20 +150,138 @@ export default function LibraryPage() {
     }
   };
 
+  // Initialize YouTube Player
+  useEffect(() => {
+    if (!selectedBook) return;
+
+    const initializePlayer = async () => {
+      try {
+        await loadYouTubeAPI();
+        
+        const videoId = extractYouTubeId(selectedBook.videoUrl);
+        if (!videoId) return;
+
+        playerRef.current = new window.YT.Player(playerDivRef.current, {
+          height: '0',
+          width: '0',
+          videoId: videoId,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            iv_load_policy: 3
+          },
+          events: {
+            onReady: (event: any) => {
+              setDuration(event.target.getDuration());
+            },
+            onStateChange: (event: any) => {
+              if (event.data === window.YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
+                startProgressUpdate();
+              } else if (event.data === window.YT.PlayerState.PAUSED) {
+                setIsPlaying(false);
+                stopProgressUpdate();
+              } else if (event.data === window.YT.PlayerState.ENDED) {
+                setIsPlaying(false);
+                setCurrentTime(0);
+                stopProgressUpdate();
+              }
+            },
+            onError: (event: any) => {
+              console.error('YouTube Player Error:', event);
+              toast({
+                title: "Playback Error",
+                description: "Could not play the audio. Please try again.",
+                variant: "destructive",
+              });
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing YouTube player:', error);
+      }
+    };
+
+    initializePlayer();
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+      stopProgressUpdate();
+    };
+  }, [selectedBook]);
+
+  // Progress update interval
+  const startProgressUpdate = () => {
+    if (window.audioProgressInterval) {
+      clearInterval(window.audioProgressInterval);
+    }
+
+    window.audioProgressInterval = setInterval(() => {
+      if (playerRef.current && playerRef.current.getCurrentTime) {
+        const time = playerRef.current.getCurrentTime();
+        setCurrentTime(time);
+        
+        if (!duration) {
+          const newDuration = playerRef.current.getDuration();
+          if (newDuration) setDuration(newDuration);
+        }
+      }
+    }, 1000);
+  };
+
+  const stopProgressUpdate = () => {
+    if (window.audioProgressInterval) {
+      clearInterval(window.audioProgressInterval);
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (!playerRef.current) return;
+
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
+    }
+  };
+
+  const seekTo = (time: number) => {
+    if (playerRef.current && playerRef.current.seekTo) {
+      playerRef.current.seekTo(time, true);
+      setCurrentTime(time);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleBookSelect = (book: LibraryBook) => {
     setSelectedBook(book);
-    setIsPlaying(true);
+    setCurrentTime(0);
+    setIsPlaying(false);
   };
 
   const handleBackToLibrary = () => {
+    if (playerRef.current) {
+      playerRef.current.stopVideo();
+      playerRef.current.destroy();
+      playerRef.current = null;
+    }
     setSelectedBook(null);
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
-  };
-
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    stopProgressUpdate();
   };
 
   const clearFilters = () => {
@@ -141,10 +289,13 @@ export default function LibraryPage() {
     setFilterBy("all");
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!duration) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const newTime = percent * duration;
+    seekTo(newTime);
   };
 
   if (!user) {
@@ -182,14 +333,51 @@ export default function LibraryPage() {
     );
   }
 
-if (selectedBook) {
-  const videoId = extractYouTubeId(selectedBook.videoUrl);
-  
-  if (!videoId) {
+  if (selectedBook) {
+    const videoId = extractYouTubeId(selectedBook.videoUrl);
+    
+    if (!videoId) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center mb-6">
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToLibrary}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Library
+                </Button>
+              </div>
+              
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="p-6 text-center">
+                  <div className="text-red-600 mb-4">
+                    <Volume2 className="h-12 w-12 mx-auto opacity-50" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-red-800 mb-2">
+                    Audio Not Available
+                  </h3>
+                  <p className="text-red-600 mb-4">
+                    Could not load the audio. The URL may be invalid or unsupported.
+                  </p>
+                  <Button onClick={handleBackToLibrary} variant="outline">
+                    Back to Library
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="flex items-center mb-6">
               <Button
                 variant="ghost"
@@ -201,20 +389,90 @@ if (selectedBook) {
               </Button>
             </div>
             
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-6 text-center">
-                <div className="text-red-600 mb-4">
-                  <Volume2 className="h-12 w-12 mx-auto opacity-50" />
+            {/* Audio Player with Thumbnail */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                  <Volume2 className="h-6 w-6 text-blue-600" />
+                  {selectedBook.bookTitle}
+                </CardTitle>
+                <p className="text-gray-600">{isPlaying ? "Now playing" : "Paused"}</p>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                {/* Thumbnail Display */}
+                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                  <div className="h-80 w-full relative">
+                    <Image
+                      src={selectedBook.thumbnail || "/placeholder.svg"}
+                      alt={selectedBook.bookTitle}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                    />
+                    
+                    {/* Audio Overlay */}
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
+                        <Volume2 className="h-16 w-16 text-white" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-red-800 mb-2">
-                  Audio Not Available
-                </h3>
-                <p className="text-red-600 mb-4">
-                  Could not load the audio. The URL may be invalid or unsupported.
-                </p>
-                <Button onClick={handleBackToLibrary} variant="outline">
-                  Back to Library
-                </Button>
+
+                {/* Audio Controls */}
+                <div className="space-y-4">
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                    <div 
+                      className="w-full bg-gray-200 rounded-full h-2 cursor-pointer"
+                      onClick={handleProgressClick}
+                    >
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Control Buttons */}
+                  <div className="flex items-center justify-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => seekTo(Math.max(0, currentTime - 10))}
+                    >
+                      -10s
+                    </Button>
+                    
+                    <Button
+                      onClick={togglePlayPause}
+                      className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700"
+                      disabled={!playerRef.current}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-8 w-8 text-white" />
+                      ) : (
+                        <Play className="h-8 w-8 text-white" />
+                      )}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => seekTo(Math.min(duration, currentTime + 10))}
+                    >
+                      +10s
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Hidden YouTube Player */}
+                <div ref={playerDivRef} className="hidden" />
               </CardContent>
             </Card>
           </div>
@@ -222,153 +480,6 @@ if (selectedBook) {
       </div>
     );
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center mb-6">
-            <Button
-              variant="ghost"
-              onClick={handleBackToLibrary}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Library
-            </Button>
-          </div>
-          
-          {/* Audio Player with Thumbnail */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <Volume2 className="h-6 w-6 text-blue-600" />
-                {selectedBook.bookTitle}
-              </CardTitle>
-              <p className="text-gray-600">Now playing audio</p>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              {/* Thumbnail Display */}
-              <div className="relative rounded-lg overflow-hidden bg-gray-100">
-                <div className="h-80 w-full relative">
-                  <Image
-                    src={selectedBook.thumbnail || "/placeholder.svg"}
-                    alt={selectedBook.bookTitle}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 800px"
-                  />
-                  
-                  {/* Audio Overlay */}
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-6">
-                      <Volume2 className="h-16 w-16 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Audio Controls */}
-              <div className="space-y-4">
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-                  <div 
-                    className="w-full bg-gray-200 rounded-full h-2 cursor-pointer"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const percent = (e.clientX - rect.left) / rect.width;
-                      const newTime = percent * duration;
-                      setCurrentTime(newTime);
-                    }}
-                  >
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Control Buttons */}
-                <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
-                  >
-                    -10s
-                  </Button>
-                  
-                  <Button
-                    onClick={togglePlayPause}
-                    className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-8 w-8 text-white" />
-                    ) : (
-                      <Play className="h-8 w-8 text-white" />
-                    )}
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentTime(Math.min(duration, currentTime + 10))}
-                  >
-                    +10s
-                  </Button>
-                </div>
-              </div>
-
-              {/* YouTube Audio Player */}
-              <div className="hidden">
-                <iframe
-                  id="youtube-audio-player"
-                  src={`https://www.youtube.com/embed/${videoId}?autoplay=0&controls=0&modestbranding=1&rel=0`}
-                  title="YouTube audio player"
-                  allow="autoplay; encrypted-media"
-                  className="w-full h-0"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Audio Progress Simulation */}
-          {isPlaying && (
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  let simulatedTime = ${currentTime};
-                  const simulatedDuration = 300; // 5 minutes for demo
-                  
-                  const progressInterval = setInterval(() => {
-                    simulatedTime += 1;
-                    if (simulatedTime >= simulatedDuration) {
-                      simulatedTime = 0;
-                      clearInterval(progressInterval);
-                      window.dispatchEvent(new CustomEvent('audioEnded'));
-                    }
-                    
-                    window.dispatchEvent(new CustomEvent('audioProgress', {
-                      detail: { currentTime: simulatedTime, duration: simulatedDuration }
-                    }));
-                  }, 1000);
-                  
-                  // Store interval ID for cleanup
-                  window.audioProgressInterval = progressInterval;
-                `
-              }}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
@@ -568,12 +679,4 @@ function toast({ title, description, variant }: { title: string; description: st
     showConfirmButton: false,
     showCloseButton: true,
   });
-}
-
-// Add event listener for audio progress simulation
-if (typeof window !== 'undefined') {
-  window.addEventListener('audioProgress', ((event: CustomEvent<{ currentTime: number; duration: number }>) => {
-    // This would be connected to your actual audio player
-    console.log('Audio progress:', event.detail);
-  }) as EventListener);
 }
