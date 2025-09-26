@@ -298,8 +298,7 @@ export default function HomePage() {
                   <Brain
                     className="h-10 w-10 relative z-10"
                     style={{ color: "var(--primary-color)" }}
-                  />
-                </div>
+                  /> </div>
                 <div>
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent font-heading">
                     OCD GUIDE
